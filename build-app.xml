@@ -1,0 +1,249 @@
+<project name="name" basedir="." default="build">
+
+    <!--property environment="env" /-->
+    <property file=".dev.properties" />
+    <property file="build.properties" />
+    <property file="${srcdir}/scriptable.properties" />
+    <property name="distdir" value="${basedir}/dist" />
+    <property name="buildnumber" value="${basedir}/build.number" />
+    <property name="warfile" value="${distdir}/${tomcat.appname}.war" />
+    <property name="webinfdir" value="${srcdir}/WEB-INF" />
+    <property name="metainfdir" value="${srcdir}/META-INF" />
+    <property name="webinflibdir" value="${webinfdir}/lib" />
+    <property name="classesdir" value="${webinfdir}/classes" />
+    <property name="templatesdir" value="${webinfdir}/templates" />
+    <property name="closure-compiler-jar" value="lib/scriptable-deps/build/closure-compiler.jar" />
+    <property name="soy-compiler-jar" value="lib/scriptable-deps/build/SoyToJsSrcCompiler.jar" />
+
+    <target name="build"
+        depends="init, init-dev-context, build-release, dev-reload" />
+
+    <!-- we copy web.xml last, to avoid failed webapp reload due to missing class files -->
+    <!-- also dev-install-context should follow compile-java -->
+    <target name="build-release"
+        depends="init, compile-scriptable-java, transpile-all, gen-beans, compile-java, dev-install-context, copy-web-xml, build-number" />
+
+    <target name="init">
+        <mkdir dir="${classesdir}" />
+        <mkdir dir="${webinflibdir}" />
+
+        <copy todir="${webinflibdir}" failonerror="false">
+            <fileset dir="${basedir}/lib" includes="*.jar" />
+        </copy>
+        <copy todir="${classesdir}">
+            <fileset dir="${srcdir}" includes="*.properties" />
+        </copy>
+        <copy todir="${webinfdir}" failonerror="false">
+            <fileset dir="${basedir}/webinfextra" includes="**" />
+        </copy>
+    </target>
+
+    <target name="copy-web-xml">
+        <copy file="${basedir}/web.xml" todir="${webinfdir}" overwrite="true" />
+    </target>
+
+    <target name="check-context-dir">
+        <available file="${tomcat.context-dir}" property="contextdst.exists" />
+    </target>
+
+    <target name="init-dev-context" depends="check-context-dir"
+            unless="tomcat.dev-context" if="contextdst.exists">
+        <echo message="To setup development instance, enter your development context e.g. /${tomcat.appname}-yourname" />
+        <echo message="NOTE: if you just want to build or release, use build-war|release-test|release-prod targets;"/>
+        <echo message="      hit &lt;Enter&gt; to cancel." />
+        <input message="(input below, no spaces, must begin with a /)" addproperty="tomcat.dev-context" />
+
+        <condition property="tomcat.dev-context.unset">
+            <equals arg1="${tomcat.dev-context}" arg2="" />
+        </condition>
+        <fail if="${tomcat.dev-context.unset}" message="Development context must not be empty!" />
+        <mkdir dir="${metainfdir}" />
+        <echo message="tomcat.dev-context=${tomcat.dev-context}" file=".dev.properties" />
+        <echo message="&lt;Context reloadable=&quot;true&quot; docBase=&quot;${srcdir}&quot;/&gt;"
+            file="${metainfdir}/context.xml" />
+        <property file=".dev.properties" />
+    </target>
+
+    <target name="dev-install-context" if="tomcat.dev-context">
+        <fail unless="tomcat.context-dir" message="Property 'tomcat.context-dir' missing in build.properties. It should specify Tomcat's webapp context directory (must be local to this host)." />
+        <copy file="${metainfdir}/context.xml" tofile="${tomcat.context-dir}/${tomcat.dev-context}.xml" />
+    </target>
+
+    <!-- redeploying may be necessary if there was a deployment error -->
+    <target name="redeploy-dev" if="tomcat.dev-context">
+        <touch file="${tomcat.context-dir}/${tomcat.dev-context}.xml" />
+    </target>
+
+    <target name="copy-lib-build">
+        <copy file="${soy-compiler-jar}" todir="${webinflibdir}" failonerror="false" />
+        <copy file="${closure-compiler-jar}" todir="${webinflibdir}" failonerror="false" />
+    </target>
+
+    <target name="dev-reload" depends="copy-lib-build, set-dev-mode" if="tomcat.dev-context">
+        <!-- NOTE: as of tomcat 8.x reloadable="true" works even when clean-building, so no need
+             to manually reload the app, this is used only for dependencies -->
+    </target>
+
+    <target name="release-test" depends="clean-build-release, set-test-mode">
+        <fail unless="tomcat.testing-war-path" message="Property 'tomcat.testing-war-path' missing in build.properties. It should specify testing environment installation pathname of the app war file (possibly remote, using 'scp' notation)." />
+        <antcall target="create-war" />
+        <antcall target="update-war"><param name="war.path" value="${tomcat.testing-war-path}" /></antcall>
+        <!-- reset dev-mode if needed --><antcall target="dev-reload" />
+    </target>
+
+    <target name="build-war" depends="clean-build-release, create-war" />
+
+    <target name="release-prod" depends="clean-build-release, set-prod-mode, create-war, tag-release">
+        <fail unless="tomcat.production-war-path" message="Property 'tomcat.production-war-path' missing in build.properties. It should specify testing environment installation pathname of the app war file (possibly remote, using 'scp' notation)." />
+        <antcall target="update-war"><param name="war.path" value="${tomcat.production-war-path}" /></antcall>
+        <!-- reset dev-mode if needed --><antcall target="dev-reload" />
+    </target>
+
+    <target name="releasing">
+        <property name="releasing" value="release" />
+    </target>
+
+    <target name="build-number">
+        <exec failonerror="true" output="${buildnumber}" executable="git">
+            <arg value = "rev-parse" />
+            <arg value = "--short" />
+            <arg value = "HEAD" />
+        </exec>
+        <loadfile srcfile="${buildnumber}" property="commit.hash" />
+        <tstamp><format property="reld" pattern="yyyyMMdd" /></tstamp>
+        <echo file="${buildnumber}"
+            append="false">build.number: ${tomcat.appname}-v${version.major}.${version.minor}.${reld}-${commit.hash}</echo>
+        <copy file="${buildnumber}" todir="${classesdir}" />
+    </target>
+
+    <target name="tag-release">
+        <input message="Please enter comment for this release:" addproperty="release.comment" />
+        <fail message="Error: empty release comment">
+            <condition><equals arg1="${release.comment}" arg2="" /></condition>
+        </fail>
+        <exec failonerror="false" executable="git">
+            <!-- don't fail if nothing to commit -->
+            <arg value = "commit" />
+            <arg value = "-a" />
+            <arg value = "-m" />
+            <arg value = "${release.comment}" />
+        </exec>
+        <antcall target="build-number" />
+        <property file="${buildnumber}" />
+        <exec failonerror="false" executable="git"><!-- create annotated tag -->
+            <arg value = "tag" />
+            <arg value = "-a" />
+            <arg value = "${build.number}" />
+            <arg value = "-m" />
+            <arg value = "${release.comment}" />
+        </exec>
+        <exec failonerror="false" executable="git"><!-- push all incl annotated tag -->
+            <arg value = "push" />
+            <arg value = "--follow-tags" />
+        </exec>
+        <exec failonerror="false" executable="git"><!-- pull origin tags -->
+            <arg value = "fetch" />
+            <arg value = "-p" />
+            <arg value = "-P" />
+        </exec>
+    </target>
+
+    <target name="update-war" if="war.path">
+        <echo message="Copying ${warfile} to ${war.path}" />
+        <exec failonerror="true" executable="scp">
+            <arg value="${warfile}" />
+            <arg value="${war.path}" />
+        </exec>
+    </target>
+
+    <path id="build-classpath">
+        <pathelement location="${classesdir}" />
+        <fileset dir="${basedir}/lib" includes="**" />
+    </path>
+
+    <target name="clean">
+        <delete dir="${webinfdir}" />
+        <delete dir="${distdir}" />
+        <delete file="${buildnumber}" />
+    </target>
+
+    <target name="dist-clean" depends="clean">
+        <delete dir="${metainfdir}" />
+        <delete file=".dev.properties" />
+        <delete file="${tomcat.context-dir}/${tomcat.dev-context}.xml" />
+    </target>
+
+    <target name="check-gen-beans">
+        <available file="src/model/gen-beans.pl" property="gen-beans.exists" />
+    </target>
+
+    <target name="gen-beans" depends="check-gen-beans" if="gen-beans.exists">
+        <exec failonerror="true" executable="src/model/gen-beans.pl" />
+    </target>
+
+    <target name="compile-scriptable-java">
+        <javac includeantruntime="false" target="1.8" srcdir="${srcdir}/scriptable/java"
+            destdir="${classesdir}" classpathref="build-classpath" debug="on">
+            <compilerarg value="-Xlint:deprecation" />
+            <compilerarg value="-Xlint:unchecked" />
+        </javac>
+
+        <taskdef name="jscomp" classname="com.bkmks.ScriptableCompileTask"
+            classpathref="build-classpath" />
+    </target>
+
+    <target name="compile-java">
+        <javac includeantruntime="false" target="1.8" srcdir="${srcdir}/java"
+            destdir="${classesdir}" classpathref="build-classpath" debug="on">
+            <compilerarg value="-Xlint:deprecation" />
+            <compilerarg value="-Xlint:unchecked" />
+        </javac>
+    </target>
+
+    <target name="transpile-all">
+        <jscomp jsModuleName="scriptable/index.js" jsFunctionName="runGenericTranspileTask"
+            documentRoot="${srcdir}" basePropertyName="targets" releasing="${releasing}" />
+        <jscomp jsModuleName="scriptable/index.js" jsFunctionName="runServerJsCompileTask"
+            documentRoot="${srcdir}" basePropertyName="" releasing="${releasing}" />
+    </target>
+
+    <target name="create-war">
+        <property name="jar.includes" value="
+                ${warextra}
+                WEB-INF/classes/**
+                WEB-INF/lib/*.jar
+                WEB-INF/resources/**
+                WEB-INF/common/**
+                WEB-INF/web.xml
+                WEB-INF/TESTING_MODE" />
+        <uptodate targetfile="${warfile}" property="jar.uptodate">
+            <srcfiles dir="${srcdir}" includes="${jar.includes}" />
+        </uptodate>
+        <jar destfile="${warfile}" basedir="${srcdir}" includes="${jar.includes}" />
+    </target>
+
+    <target name="clean-build" depends="clean, build" />
+    <target name="clean-build-release" depends="releasing, clean, build-release" />
+
+    <target name="undeploy-test">
+        <delete file="${tomcat.testing-war-path}" />
+    </target>
+    <target name="undeploy-dev">
+        <delete file="${tomcat.context-dir}/${tomcat.dev-context}.xml" />
+    </target>
+
+    <target name="set-dev-mode">
+        <echo message="mode: dev" file="${classesdir}/mode.properties" />
+    </target>
+
+    <target name="set-test-mode">
+        <echo message="mode: test" file="${classesdir}/mode.properties" />
+    </target>
+
+    <target name="set-prod-mode">
+        <!-- production mode is the default, in case no mode was set -->
+        <echo message="mode: prod" file="${classesdir}/mode.properties" />
+    </target>
+
+</project>
+

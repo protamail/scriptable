@@ -1,0 +1,128 @@
+.caret {
+    &:after { // caret
+        content: "";
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: .2em;
+        border-top: .3em solid;
+        border-left: .3em solid transparent;
+        border-right: .3em solid transparent;
+    }
+}
+
+menu-anchor {
+    cursor: pointer;
+    &.active {
+        text-decoration: underline;
+    }
+}
+
+menu-body {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    padding: .3em 0;
+    line-height: 1.8em;
+    min-width: 10em;
+    background: #444;
+    border: 1px solid #555;
+    border-radius: 2px;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .26);
+    menu-item {
+        display: block;
+        padding: 0 1em;
+        white-space: nowrap;
+        font-size: .9em;
+        &:not(.nohover):hover, &.hover {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        &.active {
+            background-color: #555;
+        }
+        &.nohover a:hover {
+            text-decoration: underline;
+        }
+        center {
+            display: inline-block;
+            width: 100%;
+        }
+    }
+    .caret-right :extend(flex-inline all) {
+        &:after {
+            content: '';
+            display: inline-block;
+            position: relative;
+            left: 1.3em;
+            border: 4px solid transparent;
+            border-left-color: inherit;
+        }
+    }
+    .caret-left :extend(.flex-inline all) {
+        &:before {
+            content: '';
+            display: inline-block;
+            position: relative;
+            left: -4px;
+            border: 4px solid transparent;
+            border-right-color: inherit;
+        }
+    }
+    hr {
+        border-top: 1px solid #999 !important;
+        margin: .5em;
+    }
+    &.top {
+        animation: menuSlideUp .1s ease-out both;
+    }
+    &.right {
+        animation: menuSlideRight .1s ease-out both;
+    }
+    &.bottom {
+        animation: menuSlideDown .1s ease-out both;
+    }
+    &.left {
+        animation: menuSlideLeft .1s ease-out both;
+    }
+}
+
+@keyframes menuSlideDown {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(7px);
+    }
+}
+
+@keyframes menuSlideUp {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-7px);
+    }
+}
+
+@keyframes menuSlideLeft {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-7px);
+    }
+}
+
+@keyframes menuSlideRight {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateX(7px);
+    }
+}
+

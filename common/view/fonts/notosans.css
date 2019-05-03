@@ -1,0 +1,60 @@
+@font-face {
+    font-family: 'notosans';
+    src: url('common/view/fonts/notosans-light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'notosans';
+    src: url('common/view/fonts/notosans-lightitalic.woff') format('woff');
+    font-weight: 300;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'notosans';
+    src: url('common/view/fonts/notosans-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'notosans';
+    src: url('common/view/fonts/notosans-italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'notosans';
+    src: url('common/view/fonts/notosans-medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'notosans';
+    src: url('common/view/fonts/notosans-mediumitalic.woff') format('woff');
+    font-weight: 500;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'notosans';
+    src: url('common/view/fonts/notosans-semibold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'notosans';
+    src: url('common/view/fonts/notosans-semibolditalic.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+}
+/*
+montserrat-italic.woff        montserrat-medium.woff   montserrat-semibolditalic.woff
+montserrat-mediumitalic.woff  montserrat-regular.woff  montserrat-semibold.woff
+*/
+

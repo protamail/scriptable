@@ -1,0 +1,62 @@
+bk-input {
+    display: inline-block;
+    background-color: white;
+    color: #20c;
+    position: relative;
+    &:not([data-disabled]) {
+        cursor: text;
+    }
+
+    &[data-disabled] {
+        background: inherit;
+        color: inherit;
+    }
+
+    input, textarea {
+        border: none;
+        background-color: inherit;
+        color: inherit;
+        padding: inherit;
+        text-align: inherit;
+        font: inherit;
+        box-shadow: 0 0 .1em .1em #69e inset;
+        position: absolute;
+        z-index: 1;
+    }
+
+    bk-src {
+        display: none;
+        white-space: pre !important; /* this is here to preserve line breaks, spaces, etc. */
+    }
+
+    bk-html {
+        /* Markdown doc styles */
+        @scale-factor: 1.618;
+        line-height: 1.54;
+
+        p {
+            width: 497.406px;
+            line-height: 1.272;
+        }
+
+        h1 {
+            font-size: @scale-factor*@scale-factor*@scale-factor;
+        }
+
+        h2 {
+            font-size: @scale-factor*@scale-factor;
+        }
+
+        h3 {
+            font-size: @scale-factor;
+        }
+
+        table {
+            color: #222;
+            th {
+                font-weight: bold;
+            }
+        }
+    }
+}
+

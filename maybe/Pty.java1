@@ -1,0 +1,177 @@
+package model.extra;
+
+import com.sun.jna.Native;
+import com.sun.jna.StringArray;
+import com.sun.jna.Structure;
+import com.sun.jna.Library;
+import java.lang.reflect.Constructor;
+import java.io.FileDescriptor;
+import java.util.List;
+import java.util.Arrays;
+
+import java.io.IOException;
+
+public class Pty {
+
+    public static class Termios extends Structure {
+        public int c_iflag = 0; // input mode flags
+        public int c_oflag = 0; // output mode flags
+        public int c_cflag = 0; // control mode flags
+        public int c_lflag = 0; // local mode flags
+        public byte c_line = 0; // line discipline
+        public byte[] c_cc = new byte[32]; // control characters
+        public int c_ispeed = 0; // input speed
+        public int c_ospeed = 0; // output speed
+
+        public Termios() {
+        }
+
+        protected List<String> getFieldOrder() {
+            return Arrays.asList(new String[] { "c_iflag", "c_oflag", "c_cflag", "c_lflag", "c_line",
+                "c_cc", "c_ispeed", "c_ospeed"
+            });
+        }
+    }
+
+    public static class Winsize extends Structure {
+        public short rows = 40; // number of rows
+        public short cols = 80; // number of columns
+        public short xpx = 0;   // width in pixels
+        public short ypx = 0;   // height in pixels
+
+        public Winsize() {
+        }
+
+        protected List<String> getFieldOrder() {
+            return Arrays.asList(new String[] { "rows", "cols", "xpx", "ypx" });
+        }
+    }
+
+    public interface C extends Library {
+        int execve(String command, StringArray argv, StringArray env);
+        int ioctl(int fd, int cmd, Winsize arg);
+        int open(String path, int oflag);
+        int close(int fd);
+    }
+
+    public interface Util extends Library {
+        int openpty(int[] amaster, int[] aslave, byte[] name, Termios termp, Winsize winp);
+        int login_tty(int fd);
+        int ttyname_r(int fd, byte[] buf, int buflen);
+        // int forkpty(int[] amaster, byte[] name, Termios termp, Winsize winp);
+    }
+
+    public static final int TIOCSWINSZ = 0x5414;
+    public static final int O_RDWR = 2;
+
+    private static final C c = (C) Native.loadLibrary("c", C.class);
+    private static final Util util = (Util) Native.loadLibrary("util", Util.class);
+
+    static int errno() {
+        return Native.getLastError(); // native errno error code
+    }
+
+    private int ptm_fd = -1;
+    private int pts_fd = -1;
+    private FileDescriptor ptmFd = null;
+    public FileDescriptor getMasterFileDescriptor() {
+        return ptmFd;
+    }
+
+    private String ptsPath = null;
+    public String getSlavePath() {
+        return ptsPath;
+    }
+
+    /**
+     * Make this process controlled by pty device
+     * 
+     * @param amaster pointer to integer descriptor of the master side of the pseudoterminal device
+     * @param name of the slave side PTY file (optional)
+     * @param termp terminal attributes of the slave side PTY file (optional)
+     * @param winp window size (optional)
+     * @return on success: 0 for the child process, positive PID number to the calling process
+     */
+    public Pty(Termios termp, Winsize winp) throws IOException {
+        try {
+            int[] amaster = new int[1];
+            int[] aslave = new int[1];
+            byte[] slavePath = new byte[64];
+            // allocate ptmx/pts pair
+            if (util.openpty(amaster, aslave, null, termp, winp) != 0)
+                throw new IOException("openpty(): errno=" + errno());
+
+            // get the pts name (slave/shell end)
+            if (util.ttyname_r(aslave[0], slavePath, 64) != 0)
+                throw new IOException("ttyname_r(): errno=" + errno());
+            
+            ptm_fd = amaster[0];
+            pts_fd = aslave[0];
+            ptmFd = getFileDescriptor(ptm_fd);
+            ptsPath = new String(slavePath, "UTF-8").trim();
+            // c.close(pts_fd); need to keep it open at least until child opens slave, or mater read error
+        }
+        catch(Throwable e){
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Create new session, make tty controlling terminal, redirect STDIO to the terminal, and
+     * replace the process with supplied command
+     */
+    public static void loginTty(String slavePath, String[] argv, String[] env) throws IOException {
+        int fd = c.open(slavePath, O_RDWR);
+        if (fd == -1 || util.login_tty(fd) != 0)
+            throw new IOException("loginTty(): errno=" + errno());
+        exec(argv, env);
+    }
+
+    /**
+     * Closes associated pty device
+     */
+    public void closeMaster() {
+        closeFD(ptm_fd);
+    }
+
+    public void closeSlave() {
+        closeFD(pts_fd);
+    }
+
+    public static int closeFD(int fd) {
+        return c.close(fd);
+    }
+
+    /**
+     * Replace calling process image with the new image and start it
+     * 
+     * @param argv the binary to execute followed by arguments
+     * @param env list of environment variables (optional)
+     * @return this function does not return on success
+     */
+    public static void exec(String[] argv, String[] env) {
+        c.execve(argv[0], new StringArray(argv), new StringArray(env != null? env : new String[0]));
+        System.exit(1); // normally should not reach here
+    }
+
+    public static FileDescriptor getFileDescriptor(int fd) throws IOException {
+        try {
+            Constructor<FileDescriptor> ctor = FileDescriptor.class.getDeclaredConstructor(Integer.TYPE);
+            ctor.setAccessible(true);
+            FileDescriptor f = ctor.newInstance(fd);
+            ctor.setAccessible(false);
+            return f;
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    public int setWinSize(short rows, short cols) {
+        Winsize ws = new Winsize();
+        ws.rows = rows;
+        ws.cols = cols;
+        return c.ioctl(ptm_fd, TIOCSWINSZ, ws);
+    }
+}
+

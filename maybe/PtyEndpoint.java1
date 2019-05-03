@@ -1,0 +1,157 @@
+package model.extra;
+ 
+import javax.websocket.OnOpen;
+import javax.websocket.OnMessage;
+import javax.websocket.OnClose;
+import javax.websocket.Session;
+import javax.websocket.server.ServerEndpoint;
+import javax.websocket.RemoteEndpoint;
+import javax.websocket.EndpointConfig;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.nio.channels.FileChannel;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.Arrays;
+import org.scriptable.HttpRequest;
+import org.scriptable.util.JavaProcess;
+
+import java.io.IOException;
+ 
+@ServerEndpoint(value="/wspty", configurator=PtyConfigurator.class)
+public class PtyEndpoint {
+    private static final ExecutorService threadPool = HttpRequest.createCachedThreadPool();
+
+    private Pty pty = null;
+    private Process shell = null;
+    private FileOutputStream masterOut = null;
+    private FileChannel masterIn = null;
+    private Future pumpThread = null;
+
+    public static void main(String[] args) {
+        try {
+            Pty.loginTty(args[0], Arrays.copyOfRange(args, 1, args.length), null);
+        } catch (IOException e) {
+            HttpRequest.logError("main: " + HttpRequest.getStackTrace(e));
+        }
+    }
+
+    @OnOpen
+    public void onOpen(Session session, EndpointConfig config) {
+        try {
+            RemoteEndpoint.Basic remote = session.getBasicRemote();
+            // remote.setBatchingAllowed(false);
+
+            pty = new Pty(null, new Pty.Winsize());
+            masterOut = new FileOutputStream(pty.getMasterFileDescriptor());
+            masterIn = new FileInputStream(pty.getMasterFileDescriptor()).getChannel();
+            File pts = new File(pty.getSlavePath());
+            HttpRequest.logWarning("Allocated " + pty.getSlavePath());
+            String cmd[] = (String[]) config.getUserProperties().get("cmdArray");
+            if (cmd == null)
+                throw new RuntimeException("onOpen: Missing required user property: cmdArray");
+            String args[] = new String[1 + cmd.length];
+            args[0] = pty.getSlavePath();
+            System.arraycopy(cmd, 0, args, 1, cmd.length);
+            shell = JavaProcess.start(PtyEndpoint.class, args);
+
+            threadPool.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        shell.waitFor();
+                        session.close(); // close this websocket connection
+                    }
+                    catch (Exception e) {}
+                    finally {
+                        HttpRequest.logWarning("Closing " + pty.getSlavePath());
+                        pty.closeSlave();
+                    }
+                }
+            });
+
+            pumpThread = threadPool.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // NOTE: we use FileChannel approach to make read's interruptible, this will
+                        // allow to reclaim resources on context shutdown and websocket close'ing
+                        //
+                        // setup buffers and decoder
+                        ByteBuffer buf = ByteBuffer.allocate(2048);
+                        CharBuffer cbuf = CharBuffer.allocate(2048);
+                        Charset cs = Charset.defaultCharset();//forName("UTF-8");
+                        CharsetDecoder dec = cs.newDecoder()
+                                // stop decoder on malformed char, it's probably partially read
+                                // and will become complete on next read iteration
+                                .onMalformedInput(CodingErrorAction.REPORT)
+                                .onUnmappableCharacter(CodingErrorAction.REPORT);
+
+                        for (int c; (c = masterIn.read(buf)) != -1; ) {
+                            // prepare buffer content to be read from,
+                            // once flip'd can use rewind() to re-read
+                            buf.flip();
+                            dec.decode(buf, cbuf, false);
+                            // don't flush or reset decoder, just continue using it indefinitely
+                            // prepare buffer content to be read from
+                            cbuf.flip();
+                            remote.sendText(cbuf.toString());
+                            // reset buffers to accept new input
+                            cbuf.clear();
+                            // must compact() input buffer instead of clear() so that any partially
+                            // read multi-byte character is presented to the decoder in the next invocation
+                            buf.compact();
+                        }
+                    }
+                    catch (Throwable e) {
+                        HttpRequest.logWarning("readThread: " + e);
+                    }
+                    finally {
+                        pty.closeMaster();
+                        shell.destroy();
+                    }
+                }
+            });
+
+        } catch (Exception e) {
+            HttpRequest.logError(HttpRequest.getStackTrace(e));
+        }
+    }
+ 
+    @OnMessage
+    public void onMessage(String message, boolean lastInSeries, Session session){
+        try {
+            masterOut.write(message.getBytes());
+        } catch (Exception e) {
+            HttpRequest.logError(HttpRequest.getStackTrace(e));
+        }
+    }
+
+    @OnMessage
+    public void onMessage(byte[] msg, Session session){
+        try {
+            String message = new String(msg);
+            if (message.startsWith("resize:")) {
+                String[] s = message.split(":");
+                if (s.length == 3) {
+                    pty.setWinSize(Short.parseShort(s[2]), Short.parseShort(s[1]));
+                }
+            }
+        } catch (Exception e) {
+            HttpRequest.logError(HttpRequest.getStackTrace(e));
+        }
+    }
+ 
+    @OnClose
+    public void onClose(Session session){
+        if (pumpThread != null)
+            pumpThread.cancel(true);
+    }
+}
+

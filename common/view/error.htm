@@ -1,0 +1,25 @@
+
+exports.status404 = t => Htm`
+  <div id="body">
+    <div id="main_content">
+      <div class="popup-panel">
+        <div>
+          ${exports.msg_page_not_found(t)}
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+
+exports.status500 = t => Htm`
+  <div id="body">
+    <div id="main_content">
+      <div class="popup-panel">
+        <div>
+          ${exports.msg_server_error(t)}
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+
