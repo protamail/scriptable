@@ -11,17 +11,18 @@
 }
 
 @keyframes kf-error {
-    20%, 60% {
-        transform: translateX(-3%);
+    5%, 35%, 65%, 95% {
+        transform: translateX(-2%);
     }
-    40%, 80% {
-        transform: translateX(3%);
+    20%, 50%, 80% {
+        transform: translateX(2%)
     }
 }
 
 .alert-anim {
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1em solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, .5);//rgba(0, 0, 0, 0.5);
+    background-clip: padding-box; /* background doesn't extend under border */
+    border: 1em solid rgba(255, 255, 255, 0);
     animation: kf-appear .2s ease-out forwards;
 
     alert-body {
@@ -44,7 +45,7 @@
 
         > alert-body {
             border-radius: 0;
-            animation: kf-alert .2s ease-out forwards, kf-error .35s .35s linear forwards; // duration/delay
+            animation: kf-alert .2s ease forwards, kf-error .3s .7s ease-in-out forwards; // duration/delay
         }
     }
     &.warning {
@@ -52,6 +53,14 @@
 
         > alert-body {
             border-radius: 0;
+        }
+    }
+    &.wait-modal {
+        cursor: wait;
+        border-width: 0;
+
+        alert-body {
+            display: none !important;
         }
     }
 }

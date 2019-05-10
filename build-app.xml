@@ -6,7 +6,7 @@
     <property file="${srcdir}/scriptable.properties" />
     <property name="distdir" value="${basedir}/dist" />
     <property name="buildnumber" value="${basedir}/build.number" />
-    <property name="warfile" value="${distdir}/${tomcat.appname}.war" />
+    <property name="warfile" value="${distdir}/${appname}.war" />
     <property name="webinfdir" value="${srcdir}/WEB-INF" />
     <property name="metainfdir" value="${srcdir}/META-INF" />
     <property name="webinflibdir" value="${webinfdir}/lib" />
@@ -43,35 +43,35 @@
     </target>
 
     <target name="check-context-dir">
-        <available file="${tomcat.context-dir}" property="contextdst.exists" />
+        <available file="${context-dir}" property="contextdst.exists" />
     </target>
 
     <target name="init-dev-context" depends="check-context-dir"
-            unless="tomcat.dev-context" if="contextdst.exists">
-        <echo message="To setup development instance, enter your development context e.g. /${tomcat.appname}-yourname" />
+            unless="dev-context" if="contextdst.exists">
+        <echo message="To setup development instance, enter your development context e.g. /${appname}-yourname" />
         <echo message="NOTE: if you just want to build or release, use build-war|release-test|release-prod targets;"/>
         <echo message="      hit &lt;Enter&gt; to cancel." />
-        <input message="(input below, no spaces, must begin with a /)" addproperty="tomcat.dev-context" />
+        <input message="(input below, no spaces, must begin with a /)" addproperty="dev-context" />
 
-        <condition property="tomcat.dev-context.unset">
-            <equals arg1="${tomcat.dev-context}" arg2="" />
+        <condition property="dev-context.unset">
+            <equals arg1="${dev-context}" arg2="" />
         </condition>
-        <fail if="${tomcat.dev-context.unset}" message="Development context must not be empty!" />
+        <fail if="${dev-context.unset}" message="Development context must not be empty!" />
         <mkdir dir="${metainfdir}" />
-        <echo message="tomcat.dev-context=${tomcat.dev-context}" file=".dev.properties" />
+        <echo message="dev-context=${dev-context}" file=".dev.properties" />
         <echo message="&lt;Context reloadable=&quot;true&quot; docBase=&quot;${srcdir}&quot;/&gt;"
             file="${metainfdir}/context.xml" />
         <property file=".dev.properties" />
     </target>
 
-    <target name="dev-install-context" if="tomcat.dev-context">
-        <fail unless="tomcat.context-dir" message="Property 'tomcat.context-dir' missing in build.properties. It should specify Tomcat's webapp context directory (must be local to this host)." />
-        <copy file="${metainfdir}/context.xml" tofile="${tomcat.context-dir}/${tomcat.dev-context}.xml" />
+    <target name="dev-install-context" if="dev-context">
+        <fail unless="context-dir" message="Property 'context-dir' missing in build.properties. It should specify app container's context directory (must be local to this host)." />
+        <copy file="${metainfdir}/context.xml" tofile="${context-dir}/${dev-context}.xml" />
     </target>
 
     <!-- redeploying may be necessary if there was a deployment error -->
-    <target name="redeploy-dev" if="tomcat.dev-context">
-        <touch file="${tomcat.context-dir}/${tomcat.dev-context}.xml" />
+    <target name="redeploy-dev" if="dev-context">
+        <touch file="${context-dir}/${dev-context}.xml" />
     </target>
 
     <target name="copy-lib-build">
@@ -79,23 +79,23 @@
         <copy file="${closure-compiler-jar}" todir="${webinflibdir}" failonerror="false" />
     </target>
 
-    <target name="dev-reload" depends="copy-lib-build, set-dev-mode" if="tomcat.dev-context">
+    <target name="dev-reload" depends="copy-lib-build, set-dev-mode" if="dev-context">
         <!-- NOTE: as of tomcat 8.x reloadable="true" works even when clean-building, so no need
              to manually reload the app, this is used only for dependencies -->
     </target>
 
     <target name="release-test" depends="clean-build-release, set-test-mode">
-        <fail unless="tomcat.testing-war-path" message="Property 'tomcat.testing-war-path' missing in build.properties. It should specify testing environment installation pathname of the app war file (possibly remote, using 'scp' notation)." />
+        <fail unless="testing-war-path" message="Property 'testing-war-path' missing in build.properties. It should specify testing environment installation pathname of the app war file (possibly remote, using 'scp' notation)." />
         <antcall target="create-war" />
-        <antcall target="update-war"><param name="war.path" value="${tomcat.testing-war-path}" /></antcall>
+        <antcall target="update-war"><param name="war.path" value="${testing-war-path}" /></antcall>
         <!-- reset dev-mode if needed --><antcall target="dev-reload" />
     </target>
 
     <target name="build-war" depends="clean-build-release, create-war" />
 
     <target name="release-prod" depends="clean-build-release, set-prod-mode, create-war, tag-release">
-        <fail unless="tomcat.production-war-path" message="Property 'tomcat.production-war-path' missing in build.properties. It should specify testing environment installation pathname of the app war file (possibly remote, using 'scp' notation)." />
-        <antcall target="update-war"><param name="war.path" value="${tomcat.production-war-path}" /></antcall>
+        <fail unless="production-war-path" message="Property 'production-war-path' missing in build.properties. It should specify testing environment installation pathname of the app war file (possibly remote, using 'scp' notation)." />
+        <antcall target="update-war"><param name="war.path" value="${production-war-path}" /></antcall>
         <!-- reset dev-mode if needed --><antcall target="dev-reload" />
     </target>
 
@@ -112,7 +112,7 @@
         <loadfile srcfile="${buildnumber}" property="commit.hash" />
         <tstamp><format property="reld" pattern="yyyyMMdd" /></tstamp>
         <echo file="${buildnumber}"
-            append="false">build.number: ${tomcat.appname}-v${version.major}.${version.minor}.${reld}-${commit.hash}</echo>
+            append="false">build.number: ${appname}-v${version.major}.${version.minor}.${reld}-${commit.hash}</echo>
         <copy file="${buildnumber}" todir="${classesdir}" />
     </target>
 
@@ -170,7 +170,7 @@
     <target name="dist-clean" depends="clean">
         <delete dir="${metainfdir}" />
         <delete file=".dev.properties" />
-        <delete file="${tomcat.context-dir}/${tomcat.dev-context}.xml" />
+        <delete file="${context-dir}/${dev-context}.xml" />
     </target>
 
     <target name="check-gen-beans">
@@ -226,10 +226,10 @@
     <target name="clean-build-release" depends="releasing, clean, build-release" />
 
     <target name="undeploy-test">
-        <delete file="${tomcat.testing-war-path}" />
+        <delete file="${testing-war-path}" />
     </target>
     <target name="undeploy-dev">
-        <delete file="${tomcat.context-dir}/${tomcat.dev-context}.xml" />
+        <delete file="${context-dir}/${dev-context}.xml" />
     </target>
 
     <target name="set-dev-mode">

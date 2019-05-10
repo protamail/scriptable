@@ -464,6 +464,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
                 request.unlockJS();
 
             requestInstance.remove();
+            // let threadLocalPerTaskCleaner cleanup connections cached per DS per thread
             //Jdbc.closeAll(); // close any cached jdbc connections on the current thread
             threadLocalPerTaskCleaner.doCleanup();
             Context.exit(); // recycle rhino context
@@ -1202,6 +1203,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
                         jobs.take().call();
                     }
                     catch (InterruptedException e) {
+                        // let threadLocalPerTaskCleaner cleanup connections cached per DS per thread
                         //Jdbc.closeAll(); // close any cached jdbc connections on the current thread
                         threadLocalPerTaskCleaner.doCleanup();
                         return; // time to exit

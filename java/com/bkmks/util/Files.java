@@ -281,13 +281,31 @@ final public class Files
     public static ScriptableMap loadPropertiesFromStream(ScriptableMap map, InputStream v) throws IOException {
         Properties prop = new Properties();
         prop.load(v);
+
         for (String name: prop.stringPropertyNames()) {
             String p = prop.getProperty(name);
+            int i = -1, j, count = 0;
+
+            // recursively resolve and interpolate any ${...} value components, where ... is another property
+            while ((i = p.indexOf("${", i + 1)) != -1 && (j = p.indexOf("}", i)) != -1) {
+                String key = p.substring(i + 2, j);
+
+                if (prop.containsKey(key))
+                    p = p.substring(0, i--) + prop.get(key).toString() + p.substring(j + 1);
+                else
+                    i = j;
+
+                if (count++ > 10000) // protect from possible recursion
+                    throw new IOException("loadPropertiesFromStream: too many variable interpolations");
+            }
+
             Object pt = p;
+
             if (p.equals("yes") || p.equals("on") || p.equals("true"))
                 pt = new Boolean(true);
             else if (p.equals("no") || p.equals("off") || p.equals("false"))
                 pt = new Boolean(false);
+
             map.put(name, pt);
         }
         return map;
