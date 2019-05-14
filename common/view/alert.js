@@ -56,12 +56,18 @@ function bkAlert(msg, opt = undefined) {
     return $($al[0].firstChild);
 }
 
-function bkError(msg) {
-    return bkAlert(msg, { cls: "error" });
+function bkError(msg, opt) {
+    opt = opt || {};
+    opt.cls = `error ${opt.cls || ""}`;
+
+    return bkAlert(msg, opt);
 }
 
-function bkWarning(msg) {
-    return bkAlert(msg, { cls: "warning" });
+function bkWarning(msg, opt) {
+    opt = opt || {};
+    opt.cls = `warning ${opt.cls || ""}`;
+
+    return bkAlert(msg, opt);
 }
 
 function bkContextAlert(msg, opt) {
