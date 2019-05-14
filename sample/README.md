@@ -1,10 +1,18 @@
-# Sample Project
+# Exandr IPCam
+
+## Assumptions
+
+Sample configuration is for recent tomcat/fedora. Local user should be part of tomcat group.
+Adjust paths as needed in build.properties
 
 ## Build
 
 For initial development instance setup, follow these steps:
 
   1. `git clone /path/to/repo.git`
+  2. `cp lib/scriptable-deps/build/_*.jar /usr/share/tomcat/lib`
+  3. `systemctl restart tomcat`
+  4. Make sure your source directory is readable by tomcat user
   4. `ant`, when prompted choose your dev instance context, e.g. /cd-and
 
 For subsequent builds, use `ant` or `ant clean-build`

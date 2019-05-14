@@ -1,10 +1,10 @@
 const conf = require("init.js");
-const model = require("cdmr/_model.js");
-const cdmr = require("cdmr/_actions.js");
-const view = require("cdmr/@view.js");
+const model = require(`${conf.appdir}/_model.js`);
+const ipcam = require(`${conf.appdir}/_actions.js`);
+const view = require(`${conf.appdir}/@view.js`);
 
 function getSession(sessionId, userId) {
-    var session = model.getSession(sessionId, userId);
+    var session = {}//model.getSession(sessionId, userId);
 
     if (session.sessionId) {
 
@@ -24,7 +24,7 @@ function getSession(sessionId, userId) {
     return session;
 }
 
-exports["__default__"] = function(r, { vpPid }, t) {
+exports["__default__"] = function(r, p, t) {
 
     t.homeUrl = r.contextPath;
     t.actType = "ACCESS"; // default activity type
@@ -39,55 +39,19 @@ exports["__default__"] = function(r, { vpPid }, t) {
     if (session == null)
         session = getSession(sessionId, null);
 
-    if (!session.sessionId || vpPid && session.sessionData.vpPid != vpPid ||
-        !('sessionDate' in session) || new Date().getDate() != session.sessionDate) {
+    if (!session.sessionId) {
 
-        var login = new Packages.cdmr.extra.Login(r, "GBMETRIC", "ALL/");
-        session.sessionDate = new Date().getDate();
-
-        if (__developmentMode__)
-            log("Validating access for " + login.userId);
-
-        if (r.isCommitted() || login.userId == null)
-            return r.ajaxRequest? r.notAuthorized() : ''; // redirected to global login or error page
-
-        if (!session.sessionId || session.sessionId != login.sessionId) {
-            // no session, different session, or VP changed
-            session = getSession(null, login.userId);
-
-            if (!session.sessionId) {
-                session = {
-                    userId: login.userId,
-                    userName: view.capitalize(login.firstName + " " + login.lastName),
-                    sessionData: {}
-                }
-            }
-
-            session.sessionId = login.sessionId;
-            session.userName = view.capitalize(login.firstName + " " + login.lastName);
-            r.setPlainCookie(conf.sessionCookieName, session.sessionId, 0);
-
-            // clear any saved assumed attuid on new session
-            delete session.sessionData.assumeAttuid;
-
-            let myDetails = model.listUserDetails(session.userId);
-
-            if (myDetails.length && myDetails[0].salesOpsAccessType == "SUPER")
-                session.sessionData.allowSwitchAttuid = true;
-            else
-                delete session.sessionData.allowSwitchAttuid;
-        }
+        //r.setPlainCookie(conf.sessionCookieName, session.sessionId, 0);
 
         // NOTE: session is cached here rather than in getSession because sessionId is known at this point
-        conf.sessionCache.put(session.sessionId, session);
-        session.sessionData.vpPid = vpPid;
+        //conf.sessionCache.put(session.sessionId, session);
     }
 
     t.session = session;
-    t.title = "CDMR";
+    t.title = "IPCAM";
 
     t.doLog = true;
-    return r.dispatchOn(cdmr);
+    return r.dispatchOn(ipcam);
 };
 
 exports["__after__"] = function(r, p, t, respSoFar) {
@@ -122,11 +86,11 @@ exports["__postprocess__"] = function(r, p, t) {
 
     if (s) {
 
-        if (s.sessionId && s.sessionDataJson)
-            model.updateSession(s.sessionId, s.userId, s.userName, s.sessionDataJson);
+//        if (s.sessionId && s.sessionDataJson)
+//            model.updateSession(s.sessionId, s.userId, s.userName, s.sessionDataJson);
 
-        if (s.userId && t.actType)
-            model.logActivity(s.userId, t.actType, t.actRefId, t.actData? _r.toJSON(t.actData) : null);
+//        if (s.userId && t.actType)
+//            model.logActivity(s.userId, t.actType, t.actRefId, t.actData? _r.toJSON(t.actData) : null);
 
         _r.logAccess(s.userId + " " + r.method + " " + r.requestUrlWithPost + " " + r.status +
             " \"" + r.userAgent + "\" " + (r.ajaxRequest? "ajax" : "-") + " " + s.requestLengthMillis + "ms");

@@ -5,13 +5,15 @@ if [[ ! $1 ]]; then
     exit 1
 fi
 
-PWD=`pwd`
+SDIR=`pwd`
 
 mkdir "../$1" && cd "../$1" && git init &&
+    # Scriptable dependencies
     git clone https://github.com/protasenko/scriptable-deps.git lib/scriptable-deps/ &&
     # NOTE: trailing slash is important here, or git won't add cloned sub-repository
     git add lib/scriptable-deps/ &&
-    mkdir src && mv "$PWD/../scriptable" src/ &&
+    cp -fr "$SDIR/sample/"* . &&
+    mv "$SDIR/../scriptable" src/ &&
     git add src/scriptable/ &&
     git add . && git commit -a -m "Initial"
 
