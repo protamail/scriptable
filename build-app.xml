@@ -209,7 +209,7 @@
 
     <target name="create-war">
         <property name="jar.includes" value="
-                ${warextra}
+                ${war-assets}
                 WEB-INF/classes/**
                 WEB-INF/lib/*.jar
                 WEB-INF/resources/**
