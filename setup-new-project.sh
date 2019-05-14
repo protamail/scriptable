@@ -9,7 +9,7 @@ PWD=`pwd`
 
 mkdir "../$1" && cd "../$1" && git init &&
     git clone https://github.com/protasenko/scriptable-deps.git lib/scriptable-deps/ &&
-    # NOTE: trailing slash is important here, or git won't add cloned subdirectory
+    # NOTE: trailing slash is important here, or git won't add cloned sub-repository
     git add lib/scriptable-deps/ &&
     mkdir src && mv "$PWD/../scriptable" src/ &&
     git add src/scriptable/ &&
