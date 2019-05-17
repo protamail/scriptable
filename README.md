@@ -1,4 +1,7 @@
-# scriptable-libs
+# Scriptable web framework
+
+Setup new project projname by running
+    `./setup-new-project.sh projname`
 
 Note on placing scriptable.jar in Tomcat's common lib directory
 -----------

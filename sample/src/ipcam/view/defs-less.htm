@@ -1,0 +1,26 @@
+/* This is CSS template for generating dynamic CSS at compile time
+ */
+
+if (__developmentMode__ || __compilationMode__) {
+
+    const genCssName = "/WEB-INF/transpiled/defs-less.htm.less";
+    const bg = require("/scriptable/common/view/svg-patterns.htm");
+    const shapes = require("/scriptable/common/view/svg-shapes.htm");
+
+    /**
+     * Note: we use URI escaping instead of base64 since even though base64 yields smaller uncompressed
+     * output, URI escaping results in smaller compressed one
+     */
+    if (loading) (() => { // don't regen css unless reloading this module (as opposed to re-eval view)
+
+    Files.writeStringToFile(Htm`
+    `, genCssName);
+
+        Files.makeWritableByAll(genCssName);
+    })();
+
+    function encodeSvgData(data) {
+        return encodeURIComponent((data+"").replace(/\n\s*/mg, ""));
+    }
+}
+

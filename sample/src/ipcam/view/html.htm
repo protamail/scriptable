@@ -1,0 +1,44 @@
+
+exports.html = ({ r, content, homeUrl, title, rootId, rootClass, script }) => Htm`<!doctype html>
+  <html ${rootId != null? Htm` id="${rootId}"` : ''}${rootClass != null? Htm` class="${rootClass}"` : ''}>
+    <head>
+      ${__developmentMode__? Htm`<script>var __start=new Date();
+          window.onload = function() {
+              document.title = (new Date() - __start) + " ms: " + document.title;
+          }
+          function loadError(href) {
+              if (!window.fetch)
+                  location.href = href;
+              else {
+                  fetch(href).then(function (response) {
+                      response.text().then(function (text) {
+                          document.body.innerHTML = text;
+                      });
+                  });
+              }
+          }
+        </script>` : ``
+      }
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta content="text/html;charset=UTF-8" http-equiv="content-type" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>${title != null? title : ''}</title>
+      <link ${__developmentMode__? Htm`onerror="loadError(this.href)"` : ''}
+        rel="StyleSheet" type="text/css" href="${homeUrl}/bundle.css?${r.instanceId}" />
+      <!-- shortcut icon needs absolute path for browser compatibility -->
+      <link rel="shortcut icon" href="${homeUrl}/favicon.ico?${r.instanceId}" />
+    </head>
+    <body data-href="#commonKbdRules" data-keydown ${__testEnvironment__? Htm.html('class="test-env"') : ''}>
+      <div id="top_target">
+        ${content}
+      </div>
+      <script>var homeUrl = "${homeUrl}";</script>
+      <script ${__developmentMode__? Htm`onerror="loadError(this.src)"` : ''}
+        type="text/javascript" src="${homeUrl}/bundle.js?${r.instanceId}"></script>
+      ${script? Htm.html(script) : ``}
+      ${__developmentMode__? Htm`<script>${Htm.js(r.getUpdateWatcherText())}</script>` : ''}
+    </body>
+  </html>
+`;
+
+

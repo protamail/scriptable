@@ -6,8 +6,8 @@
          http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
          version="2.4">
 
-    <description>Comp design</description>
-    <display-name>Compdsn</display-name>
+    <description>Exandr ipcam</description>
+    <display-name>Exandr</display-name>
 
     <servlet>
         <servlet-name>RhinoServlet</servlet-name>

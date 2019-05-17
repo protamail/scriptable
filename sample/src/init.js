@@ -4,7 +4,7 @@
  */
 
 // recognize error code 20002 as validation error
-exports.DS_CDMR = new DataSourceConfig("compdatasource", 20002);
+//exports.DS_IPCAM = new DataSourceConfig("ipcam", 20002);
 
 // Customize time zone for use in date formatting routines
 com.bkmks.template.TemplateUtil.timeZone = "GMT";

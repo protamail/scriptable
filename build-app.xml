@@ -32,6 +32,7 @@
         </copy>
         <copy todir="${classesdir}">
             <fileset dir="${srcdir}" includes="*.properties" />
+            <fileset dir="${srcdir}/scriptable" includes="*.properties" />
         </copy>
         <copy todir="${webinfdir}" failonerror="false">
             <fileset dir="${basedir}/webinfextra" includes="**" />
