@@ -1,0 +1,17 @@
+*.buf
+*.war
+*.swp
+*.tar
+*.gz
+*.bak
+*.bak*
+*.old*
+*.cur
+*~
+WEB-INF
+META-INF
+dist
+.dev.properties
+build.number
+src/site.js
+
