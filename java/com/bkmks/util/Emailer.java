@@ -28,7 +28,7 @@ public final class Emailer
 
     /**
      * Send an email.
-     * @param from optional, if null, mail.from property value will be used
+     * @param from optional, if null, mail_from property value will be used
      * @param textBody optional
      */
     public void sendTextEmail(String to, String subject, String textBody)
@@ -48,8 +48,8 @@ public final class Emailer
 
         if (from != null)
             message.setFrom(new InternetAddress(from));
-        else if (mailProperties.get("mail.from") != null)
-            message.setFrom(new InternetAddress(mailProperties.getProperty("mail.from")));
+        else if (mailProperties.get("mail_from") != null)
+            message.setFrom(new InternetAddress(mailProperties.getProperty("mail_from")));
 
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
         message.setSubject(subject);

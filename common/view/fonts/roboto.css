@@ -1,5 +1,17 @@
 @font-face {
     font-family: 'roboto';
+    src: url('common/view/fonts/roboto-light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'roboto';
+    src: url('common/view/fonts/roboto-lightitalic.woff') format('woff');
+    font-weight: 300;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'roboto';
     src: url('common/view/fonts/roboto-regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
@@ -15,5 +27,11 @@
     src: url('common/view/fonts/roboto-bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
+}
+@font-face {
+    font-family: 'roboto';
+    src: url('common/view/fonts/roboto-bolditalic.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
 }
 
