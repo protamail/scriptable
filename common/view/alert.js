@@ -86,3 +86,12 @@ function bkContextAlert(msg, opt) {
     });
 }
 
+function bkWaitModal() {
+    return bkAlert(``, { cls: "wait-modal" })
+        .on("close", function (e) {
+            if (e.data && e.data.originalEvent)
+                e.cancelBubble = true; // don't let user close this
+        });
+    // bkWaitModal().trigger("close") to clear
+}
+

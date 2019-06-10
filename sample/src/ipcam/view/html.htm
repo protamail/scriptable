@@ -28,7 +28,7 @@ exports.html = ({ r, content, homeUrl, title, rootId, rootClass, script }) => Ht
       <!-- shortcut icon needs absolute path for browser compatibility -->
       <link rel="shortcut icon" href="${homeUrl}/favicon.ico?${r.instanceId}" />
     </head>
-    <body data-href="#commonKbdRules" data-keydown ${__testEnvironment__? Htm.html('class="test-env"') : ''}>
+    <body ${__testEnvironment__? Htm.html('class="test-env"') : ''}>
       <div id="top_target">
         ${content}
       </div>
