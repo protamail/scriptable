@@ -372,18 +372,21 @@ public final class TemplateUtil {
 
             // collapse all newlines followed by space found in static content into ""
             synchronized (nativeArray) {
-                Pattern pattern0 = Pattern.compile(">\\s+<", Pattern.DOTALL);
-                Pattern pattern1 = Pattern.compile("\\n\\s+", Pattern.DOTALL);
+                Pattern patternA = Pattern.compile(">\\s+", Pattern.DOTALL);
+                Pattern patternB = Pattern.compile("\\s+<", Pattern.DOTALL);
+                Pattern pattern1 = Pattern.compile("\\s\\s+", Pattern.DOTALL);
                 Pattern pattern2 = Pattern.compile("<!--.*?-->\\n?", Pattern.DOTALL);
                 nativeArray.put(ws_stripped, nativeArray, true);
 
                 for (i = 0; i < p.size(); i++) {
                     nativeArray.put(i, nativeArray,
                         pattern2.matcher(
-                            // must keep newline to avoid joining tag and attribute from the next line
                             pattern1.matcher(
-                                pattern0.matcher(nativeArray.get(i, nativeArray).toString()).replaceAll("><")
-                            ).replaceAll("\n")
+                                patternA.matcher(
+                                    patternB.matcher(nativeArray.get(i, nativeArray).toString()
+                                    ).replaceAll("<")
+                                ).replaceAll("\n>")
+                            ).replaceAll("\n") // must keep WS to avoid joining tag and attribute from the next line
                         ).replaceAll("")
                     );
                 }
