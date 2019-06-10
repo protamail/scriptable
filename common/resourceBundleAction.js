@@ -50,12 +50,12 @@ var public_file_matchers = "public-files" in conf?
         Resources.getPathMatchers(conf["public-files"]) : null;
 
 // serve various static files from view/ as long as they match public-files glob spec
-exports["common"] = exports["view"] = function(r) {
+exports["static"] = exports["view"] = function(r) {
 
     if (public_file_matchers == null)
         throw "Missing required property: 'public-files'";
 
-    let file = "/scriptable" + r.originalActionPath;
+    let file = r.originalActionPath;
 
     for (var i=0; i<public_file_matchers.length; i++) {
 
@@ -65,5 +65,9 @@ exports["common"] = exports["view"] = function(r) {
     }
 
     return r.notFound();
+}
+
+exports["favicon.ico"] = function(r, p, t) {
+    return r.sendContent({ file: "static/images/favicon.ico" });
 }
 
