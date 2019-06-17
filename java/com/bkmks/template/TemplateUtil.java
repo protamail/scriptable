@@ -359,41 +359,39 @@ public final class TemplateUtil {
                     "Htm/applyJsTemplate: first parameter is expected to be of List type");
 
         List p = (List)args[0];
-
-        if (p.size() == 1 && args.length == 1) // no interpolation required shortcut
-            return new HtmlFragment(p.get(0).toString());
-
-        Scriptable nativeArray = (Scriptable)p;
-        StringBuilder sb = new StringBuilder();
-
+        Scriptable nativeP = (Scriptable)p;
         int i;
 
-        if (!nativeArray.has(ws_stripped, nativeArray) && JS_TEMPLATE_STRIP_WS) {
-
+        if (!nativeP.has(ws_stripped, nativeP) && JS_TEMPLATE_STRIP_WS) {
             // collapse all newlines followed by space found in static content into ""
-            synchronized (nativeArray) {
-                Pattern patternA = Pattern.compile(">\\s+", Pattern.DOTALL);
-                Pattern patternB = Pattern.compile("\\s+<", Pattern.DOTALL);
-                Pattern pattern1 = Pattern.compile("\\s\\s+", Pattern.DOTALL);
-                Pattern pattern2 = Pattern.compile("<!--.*?-->\\n?", Pattern.DOTALL);
-                nativeArray.put(ws_stripped, nativeArray, true);
+            synchronized (nativeP) {
+                Pattern stripA = Pattern.compile("(/?|-?-?)>\\n\\s*", Pattern.DOTALL);
+                Pattern stripB = Pattern.compile("\\n\\s*<", Pattern.DOTALL);
+                Pattern stripC = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
+                // some WS-only fragments, e.g. between side-by-side interpolations
+                Pattern collapse = Pattern.compile("\\n\\s+", Pattern.DOTALL);
+                nativeP.put(ws_stripped, nativeP, true);
 
                 for (i = 0; i < p.size(); i++) {
-                    nativeArray.put(i, nativeArray,
-                        pattern2.matcher(
-                            pattern1.matcher(
-                                patternA.matcher(
-                                    patternB.matcher(nativeArray.get(i, nativeArray).toString()
-                                    ).replaceAll("<")
-                                ).replaceAll("\n>")
-                            ).replaceAll("\n") // must keep WS to avoid joining tag and attribute from the next line
-                        ).replaceAll("")
+                    nativeP.put(i, nativeP,
+                        collapse.matcher(
+                            stripC.matcher(
+                                stripB.matcher(
+                                    stripA.matcher(nativeP.get(i, nativeP).toString()
+                                    ).replaceAll("\n$1>")
+                                ).replaceAll("<")
+                            ).replaceAll("")
+                        ).replaceAll("\n")
                     );
                 }
             }
         }
 
+        if (p.size() == 1 && args.length == 1) // no interpolation required shortcut
+            return new HtmlFragment(p.get(0).toString());
+
         String s;
+        StringBuilder sb = new StringBuilder();
 
         for (i = 0; i < p.size()-1;) {
             sb.append(p.get(i++)); // must preceed the rest
