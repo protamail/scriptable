@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import com.bkmks.RhinoHttpRequest;
 import com.bkmks.ScriptableThing;
+import com.bkmks.HttpRequest;
 import org.mozilla.javascript.Scriptable;
 
 public final class TemplateUtil {
@@ -364,6 +365,8 @@ public final class TemplateUtil {
 
         if (!nativeP.has(ws_stripped, nativeP) && JS_TEMPLATE_STRIP_WS) {
             // collapse all newlines followed by space found in static content into ""
+            HttpRequest.logInfo("Stripping extra whitespace from HtmlFragment");
+
             synchronized (nativeP) {
                 Pattern stripA = Pattern.compile("(/?|-?-?)>\\n\\s*", Pattern.DOTALL);
                 Pattern stripB = Pattern.compile("\\n\\s*<", Pattern.DOTALL);
