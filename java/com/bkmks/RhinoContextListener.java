@@ -19,6 +19,7 @@ public final class RhinoContextListener implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent event) {
         synchronized(RhinoContextListener.class) {
+
             for (ExecutorService es: executors) {
                 es.shutdownNow();
             }

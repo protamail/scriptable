@@ -51,10 +51,13 @@ public final class Emailer
         else if (mailProperties.get("mail_from") != null)
             message.setFrom(new InternetAddress(mailProperties.getProperty("mail_from")));
 
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+        for (String toAddr: to.split("[,;] *"))
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(toAddr));
+
         message.setSubject(subject);
         MimeMultipart multi = new MimeMultipart();
         MimeBodyPart bodyPart;
+
         if (textBody != null && htmlBody != null && !htmlBody.equals("")) {
             // attach this one first, since some clients just use the last part dy default
             bodyPart = new MimeBodyPart();
@@ -62,11 +65,14 @@ public final class Emailer
             multi.addBodyPart(bodyPart);
             multi.setSubType("alternative"); // let the reader choose between html and plain text version
         }
+
         bodyPart = new MimeBodyPart();
+
         if (htmlBody != null && !htmlBody.equals(""))
             bodyPart.setContent(htmlBody, RhinoHttpRequest.CONTENT_HTML);
         else
             bodyPart.setContent(textBody, RhinoHttpRequest.CONTENT_PLAIN);
+
         multi.addBodyPart(bodyPart);
 
         message.setContent(multi);
