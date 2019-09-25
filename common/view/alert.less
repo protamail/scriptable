@@ -5,19 +5,22 @@
 }
 
 @keyframes kf-alert {
-    from {
-        transform: translateY(-160%);
+    0% {
+        transform: scale(0.7);
+    }
+    70% {
+        transform: scale(1.03);
     }
 }
 
-@keyframes kf-error {
+/*@keyframes kf-error {
     5%, 35%, 65%, 95% {
         transform: translateX(-2%);
     }
     20%, 50%, 80% {
         transform: translateX(2%)
     }
-}
+}*/
 
 .alert-anim {
     background-color: rgba(0, 0, 0, .2);//rgba(0, 0, 0, 0.5);
@@ -30,7 +33,7 @@
         /*top: -10vh; // shift off-center*/
         max-height: 90vh;
         overflow: auto;
-        animation: kf-alert .2s ease-out forwards;
+        animation: kf-alert .15s ease-in-out forwards;
         padding: 2em;
         min-width: 10em;
         max-width: 50em;
@@ -45,7 +48,8 @@
 
         > alert-body {
             border-radius: 0;
-            animation: kf-alert .2s ease forwards, kf-error .3s .7s ease-in-out forwards; // duration/delay
+            animation: kf-alert .15s ease-in-out forwards;
+            //, kf-error .3s .7s ease-in-out forwards; // duration/delay
         }
     }
     &.warning {
