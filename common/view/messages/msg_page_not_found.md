@@ -1,3 +1,3 @@
-# 404 &mdash; Not Found
+# Page Not Found
 
-#### <center>[Return to the home page](${t.homeUrl})</center>
+#### <center>[Home Page](${t.homeUrl})</center>

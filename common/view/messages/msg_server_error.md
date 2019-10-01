@@ -1,3 +1,3 @@
-# Server Error :(
+# Server Error :-/
 
-#### <center>[Return to the home page](${t.homeUrl})</center>
+#### <center>[Home Page](${t.homeUrl})</center>
