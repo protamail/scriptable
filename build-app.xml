@@ -60,7 +60,7 @@
         <fail if="${dev-context.unset}" message="Development context must not be empty!" />
         <mkdir dir="${metainfdir}" />
         <echo message="dev-context=${dev-context}" file=".dev.properties" />
-        <echo message="&lt;Context reloadable=&quot;true&quot; docBase=&quot;${srcdir}&quot;/&gt;"
+        <echo message="&lt;Context reloadable=&quot;false&quot; docBase=&quot;${srcdir}&quot;/&gt;"
             file="${metainfdir}/context.xml" />
         <property file=".dev.properties" />
     </target>
