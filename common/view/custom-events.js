@@ -4,9 +4,28 @@
  
 function customClickHandler(e, targetOverride) {
     let updateWindowEvent = !window.event;
+    let cont = true;
 
-    for (let t = targetOverride || e.target; t != null; t = t.parentNode) {
-        // interpret links like xxx?a=1&b=2#funcX as funcX("xxx", { a: 1, b: 2 }) if funcX exists
+    for (let c = document.getElementsByTagName("PRECUSTOMEVENT"), i = 0; i < c.length; i++)
+        cont = probeTarget(c[i]) !== false && cont;
+
+    if (cont) {
+        for (let t = targetOverride || e.target; t != null; t = t.parentNode) {
+            if (probeTarget(t) === false) {
+                cont = false;
+                break;
+            }
+        }
+    }
+
+    if (cont) {
+        for (let c = document.getElementsByTagName("POSTCUSTOMEVENT"), i = 0; i < c.length; i++)
+            probeTarget(c[i]);
+    }
+
+    function probeTarget(t) {
+        // interpret "links" like xxx?a=1&b=2#funcX as funcX("xxx", { a: 1, b: 2 }) if funcX exists
+        // Multiple, space-separated "links" can be specified
         let hrefs = t.getAttribute && (t.getAttribute("data-href") || t.getAttribute("href"));
 
         if (hrefs != null) {
@@ -15,7 +34,7 @@ function customClickHandler(e, targetOverride) {
 
                 if (e.type == "keydown" && t.getAttribute("data-keydown") == null ||
                     e.type == "keyup" && t.getAttribute("data-keyup") == null)
-                    continue;
+                    return;
             }
 
             let $t = $(t);
@@ -59,10 +78,10 @@ function customClickHandler(e, targetOverride) {
                 }
 
                 if (e.cancelBubble)
-                    break;
+                    return false;
             }
-            else
-                break; // this might an actual href, let it work as usual
+            else if (t.tagName == "A")
+                return false; // this is an actual href, let it work as usual
         }
     }
 
