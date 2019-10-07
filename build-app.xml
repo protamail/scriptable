@@ -68,10 +68,6 @@
     <target name="dev-install-context" if="dev-context">
         <fail unless="context-dir" message="Property 'context-dir' missing in build.properties. It should specify app container's context directory (must be local to this host)." />
         <copy file="${metainfdir}/context.xml" tofile="${context-dir}/${dev-context}.xml" />
-    </target>
-
-    <!-- redeploying may be necessary if there was a deployment error -->
-    <target name="redeploy-dev" if="dev-context">
         <touch file="${context-dir}/${dev-context}.xml" />
     </target>
 
@@ -80,9 +76,9 @@
         <copy file="${closure-compiler-jar}" todir="${webinflibdir}" failonerror="false" />
     </target>
 
-    <target name="dev-reload" depends="copy-lib-build, set-dev-mode" if="dev-context">
-        <!-- NOTE: as of tomcat 8.x reloadable="true" works even when clean-building, so no need
-             to manually reload the app, this is used only for dependencies -->
+    <target name="dev-reload" depends="copy-lib-build, set-dev-mode, dev-install-context" if="dev-context">
+      <!-- NOTE: dev context no longer uses reloadable="true" because it causes tomcat CPU spikes
+           every time it checks for updated classes, so we touch context file to signal reload -->
     </target>
 
     <target name="release-test" depends="clean-build-release, set-test-mode">
