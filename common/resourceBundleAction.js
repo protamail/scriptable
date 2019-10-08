@@ -12,7 +12,7 @@ function sendCssBundle(r, baseProp) {
         return r.sendContent({ file: conf[baseProp + ".output"] });
 
     // load less lib only in dev
-    require("/scriptable-less/index.js").runLessCompileTask(baseProp);
+    require("/scriptable/less/index.js").runLessCompileTask(baseProp);
 
     return r.sendContent({ file: conf[baseProp + ".output"] });
 };

@@ -157,7 +157,7 @@ function getModUpdateStatus(file, lastModified) {
                 return { lastModified: lastModified };
         }
 
-        // tranpiled version doesn't exist
+        // transpiled version doesn't exist
         t = Files.getLastModified(file);
 
         if (t == 0) // file not found
