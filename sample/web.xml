@@ -11,7 +11,7 @@
 
     <servlet>
         <servlet-name>RhinoServlet</servlet-name>
-        <servlet-class>com.bkmks.RhinoServlet</servlet-class>
+        <servlet-class>org.scriptable.RhinoServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 

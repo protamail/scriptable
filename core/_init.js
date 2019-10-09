@@ -11,7 +11,7 @@ if ("require" in this)
  * 2. No variables can be exported other than via globalScope since this module can't be require'd
  */
 this.globalScope = this.__globalScope__ = this.global = this;
-this.scriptable = Packages.com.bkmks;
+this.scriptable = Packages.org.scriptable;
 
 var JavaMethodHandles = scriptable.JavaMethodHandles;
 
@@ -185,7 +185,7 @@ Htm.format = JavaMethodHandles.formatAny;
 
 Object.defineProperty(Htm, 'keepWs', {
     set: function(v) {
-        com.bkmks.template.TemplateUtil.JS_TEMPLATE_STRIP_WS = !v;
+        org.scriptable.template.TemplateUtil.JS_TEMPLATE_STRIP_WS = !v;
     }
 });
 

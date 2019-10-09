@@ -185,7 +185,7 @@
             <compilerarg value="-Xlint:unchecked" />
         </javac>
 
-        <taskdef name="jscomp" classname="com.bkmks.ScriptableCompileTask"
+        <taskdef name="jscomp" classname="org.scriptable.ScriptableCompileTask"
             classpathref="build-classpath" />
     </target>
 

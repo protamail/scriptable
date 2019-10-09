@@ -7,7 +7,7 @@
 //exports.DS_IPCAM = new DataSourceConfig("ipcam", 20002);
 
 // Customize time zone for use in date formatting routines
-com.bkmks.template.TemplateUtil.timeZone = "GMT";
+org.scriptable.template.TemplateUtil.timeZone = "GMT";
 
 exports.sessionCookieName = "ssid";
 exports.sessionCache = new LruCache(256);

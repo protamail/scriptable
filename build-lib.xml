@@ -48,7 +48,7 @@
     </target>
 
     <target name="compile-lib-js" depends="compile">
-        <taskdef name="sjscomp" classname="com.bkmks.ScriptableCompileTask"
+        <taskdef name="sjscomp" classname="org.scriptable.ScriptableCompileTask"
             classpathref="build-js-classpath" />
         <sjscomp jsModuleName="scriptable/index.js" jsFunctionName="runServerJsTranspileTask"
             documentRoot="${srcdir}" basePropertyName="${group-import-name}" releasing="${releasing}" />

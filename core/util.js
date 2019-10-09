@@ -35,8 +35,8 @@ exports.exec = function(cmd, env, workDir) {
     return process.waitFor();
 }
 
-exports.escapeJs = com.bkmks.JavaMethodHandles.escapeJs;
-exports.escapeHtml = com.bkmks.JavaMethodHandles.escapeHtml;
+exports.escapeJs = org.scriptable.JavaMethodHandles.escapeJs;
+exports.escapeHtml = org.scriptable.JavaMethodHandles.escapeHtml;
 exports.escapeUri = encodeURIComponent;
 
 exports.augmentFirst = function(o1, o2, on) {
