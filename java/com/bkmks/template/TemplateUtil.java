@@ -364,19 +364,20 @@ public final class TemplateUtil {
         int i;
 
         if (!nativeP.has(ws_stripped, nativeP) && JS_TEMPLATE_STRIP_WS) {
-            // collapse all newlines followed by space found in static content into ""
+            // remove unwanted inline WS-only text nodes resulting in unintended/random extra spacing
+            // in rendered HTML document
             HttpRequest.logInfo("Stripping extra whitespace from HtmlFragment");
 
             synchronized (nativeP) {
                 // keep the newline for readability while eliminating WS between tags
                 Pattern stripA = Pattern.compile("(/?|-?-?)>\\s*\\n\\s*", Pattern.DOTALL);
-                // trim leading/trailing WS if fragment starts/ends with tag
+                // trim leading/trailing WS if fragment starts/ends with a tag
                 Pattern stripB = Pattern.compile("^\\s*\\n\\s*(<)|(>)\\s*\\n\\s*$", Pattern.DOTALL);
                 // remove static HTML comments, this won't work for comments with embedded interpolation ${}
                 Pattern stripC = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
                 // WS-only fragments with embedded newline, e.g. between side-by-side interpolations
                 Pattern allWS = Pattern.compile("^\\s*\\n\\s*$", Pattern.DOTALL);
-                // WS with embedded newline, collapse while preserving formatting
+                // WS with embedded newline, collapse while preserving formatting (for size optimization)
                 Pattern spanWS = Pattern.compile("\\n\\s+", Pattern.DOTALL);
                 nativeP.put(ws_stripped, nativeP, true);
 
