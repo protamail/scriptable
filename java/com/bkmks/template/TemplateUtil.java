@@ -368,23 +368,31 @@ public final class TemplateUtil {
             HttpRequest.logInfo("Stripping extra whitespace from HtmlFragment");
 
             synchronized (nativeP) {
-                Pattern stripA = Pattern.compile("(/?|-?-?)>\\n\\s*", Pattern.DOTALL);
-                Pattern stripB = Pattern.compile("\\n\\s*<", Pattern.DOTALL);
+                // keep the newline for readability while eliminating WS between tags
+                Pattern stripA = Pattern.compile("(/?|-?-?)>\\s*\\n\\s*", Pattern.DOTALL);
+                // trim leading/trailing WS if fragment starts/ends with tag
+                Pattern stripB = Pattern.compile("^\\s*\\n\\s*(<)|(>)\\s*\\n\\s*$", Pattern.DOTALL);
+                // remove static HTML comments, this won't work for comments with embedded interpolation ${}
                 Pattern stripC = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
-                // some WS-only fragments, e.g. between side-by-side interpolations
-                Pattern collapse = Pattern.compile("\\n\\s+", Pattern.DOTALL);
+                // WS-only fragments with embedded newline, e.g. between side-by-side interpolations
+                Pattern allWS = Pattern.compile("^\\s*\\n\\s*$", Pattern.DOTALL);
+                // WS with embedded newline, collapse while preserving formatting
+                Pattern spanWS = Pattern.compile("\\n\\s+", Pattern.DOTALL);
                 nativeP.put(ws_stripped, nativeP, true);
 
                 for (i = 0; i < p.size(); i++) {
                     nativeP.put(i, nativeP,
-                        collapse.matcher(
-                            stripC.matcher(
-                                stripB.matcher(
-                                    stripA.matcher(nativeP.get(i, nativeP).toString()
-                                    ).replaceAll("\n$1>")
-                                ).replaceAll("<")
+                        spanWS.matcher(
+                            allWS.matcher(
+                                stripA.matcher(
+                                    stripB.matcher(
+                                        stripC.matcher(
+                                            nativeP.get(i, nativeP).toString()
+                                        ).replaceAll("")
+                                    ).replaceAll("$1$2")
+                                ).replaceAll("\n$1>")
                             ).replaceAll("")
-                        ).replaceAll("\n")
+                        ).replaceAll("\n\t")
                     );
                 }
             }
