@@ -1,0 +1,25 @@
+.ripple-progress {
+    position: relative; /* ripple effect -- contain :after */
+
+    /* ripple effect -- pull */
+    &:active:after {
+        width: 0;
+        opacity: 1;
+        transition: 0s
+    }
+
+    /* ripple effect -- release */
+    &:after {
+        content: "";
+        background: rgba(255, 255, 255, .7);
+        display: block;
+        position: absolute;
+        top:0;
+        left:0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: all .2s
+    }
+}
+
