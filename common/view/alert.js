@@ -16,12 +16,9 @@ function bkAlert(msg, opt = undefined) {
 
             if (e.target === this && e.type === "click" || e.type === "keydown" && e.which == 27) {
                     $($al[0].firstChild).trigger("close", { originalEvent: e }); // give user code chance to override
-//                else
-                    // override target to let the msg root node handle the event
-//                    customClickHandler(e, $al.find("alert-body > *")[0]);
             }
             else
-                customClickHandler(e);
+                bkCustomEvents(this, e);
 
             e.stopPropagation(); // make the dialog modal (blocking)
 

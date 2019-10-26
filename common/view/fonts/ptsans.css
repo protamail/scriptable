@@ -70,6 +70,20 @@
 }
 
 @font-face {
+    font-family: 'pt_sans';
+    src: url('static/fonts/ClearSans-Italic.woff') format('woff');
+    font-weight: 300;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'pt_sans';
+    src: url('static/fonts/ClearSans-Italic.woff') format('woff');
+    font-weight: 200;
+    font-style: italic;
+}
+
+@font-face {
     font-family: 'pt_sans_caption';
     src: url('static/fonts/ClearSans-Light.woff') format('woff');
     font-weight: 300;
@@ -81,5 +95,19 @@
     src: url('static/fonts/ClearSans-Thin.woff') format('woff');
     font-weight: 200;
     font-style: normal;
+}
+
+@font-face {
+    font-family: 'pt_sans_caption';
+    src: url('static/fonts/ClearSans-Italic.woff') format('woff');
+    font-weight: 300;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'pt_sans_caption';
+    src: url('static/fonts/ClearSans-Italic.woff') format('woff');
+    font-weight: 200;
+    font-style: italic;
 }
 

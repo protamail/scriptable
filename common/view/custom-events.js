@@ -2,19 +2,23 @@
 // while keydown is preferable for ENTER and SPACE, since this way default action
 // can be prevented for real anchor tags (otherwise those will generate a click)
  
-function customClickHandler(e, targetOverride) {
+exports.bkCustomEvents = function (element, e, dataAttr) {
     let updateWindowEvent = !window.event;
     let cont = true;
+    dataAttr = dataAttr || 'data-href';
 
     for (let c = document.getElementsByTagName("PRECUSTOMEVENT"), i = 0; i < c.length; i++)
         cont = probeTarget(c[i]) !== false && cont;
 
     if (cont) {
-        for (let t = targetOverride || e.target; t != null; t = t.parentNode) {
+        for (let t = e.target; t != null; t = t.parentNode) {
             if (probeTarget(t) === false) {
                 cont = false;
                 break;
             }
+
+            if (t === element) // stop at the element on which bkCustomEvents was called as event handler
+                break;
         }
     }
 
@@ -26,52 +30,42 @@ function customClickHandler(e, targetOverride) {
     function probeTarget(t) {
         // interpret "links" like xxx?a=1&b=2#funcX as funcX("xxx", { a: 1, b: 2 }) if funcX exists
         // Multiple, space-separated "links" can be specified
-        let hrefs = t.getAttribute && (t.getAttribute("data-href") || t.getAttribute("href"));
+        let hrefs = t.getAttribute && t.getAttribute(dataAttr) ||
+            t.tagName && t.tagName == "A" && e.type == "click" && t.getAttribute("href");
 
-        if (hrefs != null) {
-            // skip keypress events if not explicitly requested
-            if (e.type != "click") {
+        if (hrefs) {
+            let bkCache = t.bkCache;
 
-                if (e.type == "keydown" && t.getAttribute("data-keydown") == null ||
-                    e.type == "keyup" && t.getAttribute("data-keyup") == null)
-                    return;
-            }
-
-            let $t = $(t);
-            let actions = $t.data("href-action");
-
-            if (!actions || actions[0].hrefs != hrefs) {
+            if (!bkCache) { // parse if not cached
 
                 for (let href of hrefs.split(" ")) {
                     let h = href.indexOf("#");
-                    let f = h != -1? href.substring(h+1) : null;
+                    let fn = h != -1? href.substring(h + 1) : null;
                     let q = href.indexOf("?");
+                    let func = window[fn];
 
-                    if (f != null && typeof window[f] == "function") {
-                        actions = actions || [];
-                        actions.push( {
-                            f: f,
+                    if (fn != null && typeof func == "function") {
+                        bkCache = bkCache || [];
+                        t.bkCache = bkCache;
+                        bkCache.push({
+                            func: func,
                             path: href.substring(0, q != -1? q : h != -1? h : href.length),
-                            data: q != -1? decodeUrlData(href.substring(q + 1)) : {},
-                            hrefs: hrefs // to invalidate cache when href changes
-                        } );
-                        $t.data("href-action", actions);
+                            data: q != -1? decodeUrlData(href.substring(q + 1)) : {}
+                        });
                     }
-                    else if (f != null)
-                        console.warn(f + " is not defined: " + href);
+                    else if (fn != null)
+                        console.warn(fn + " is not defined: " + href);
                 }
             }
 
-            if (actions) {// && (!(d.data.__click__ || d.data.__enter__ || d.data.__space__) ||
-//                        (d.data.__click__ && e.type == "click") ||
-//                        (d.data.__enter__ && e.type == "keydown" && e.which == 13) ||
-//                        (d.data.__space__ && e.type == "keydown" && e.which == 32))) {
+            if (bkCache) {
 
                 if (updateWindowEvent)
                     window.event = e; // FF is not setting this one
 
-                for (let a of actions) {
-                    let r = window[a.f].call(t, a.path, a.data, e);
+                for (let i = 0; i < bkCache.length; i++) {
+                    let c = bkCache[i];
+                    let r = c.func.call(t, c.path, c.data, e);
 
                     if (r !== true) // handler can return true to preserve the default link action
                         e.preventDefault(); // don't follow link and prevent subsequent keypress event
@@ -91,13 +85,12 @@ function customClickHandler(e, targetOverride) {
 
 $(window).on("click", e => {
         if (!e.which || e.which == 1) // e.which is undefined on triggered click
-            // by default we handle left click only, nevertheless
-            // customClickHandler might be called explicitly for other events as well (e.g. modal dialogs)
-            /*e.type == "keydown" && e.which != 13*/
-            customClickHandler(e);
+//            // by default we handle left click only, nevertheless
+//            // bkCustomEvents might be called explicitly at lower levels to handle other events/dataAttr
+            exports.bkCustomEvents(window, e, 'data-href');
     })
-    .on("keydown", e => customClickHandler(e))
-    .on("keyup", e => customClickHandler(e));
+//    .on("keydown", e => exports.bkCustomEvents(e))
+//    .on("keyup", e => exports.bkCustomEvents(e));
 
 // this function is used to trigger custom events,
 //window.trigger = function($this, evName, data) {
