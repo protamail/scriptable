@@ -4,11 +4,13 @@
  
 exports.bkCustomEvents = function (element, e, dataAttr) {
     let updateWindowEvent = !window.event;
-    let cont = true;
+    let cont = true; // will turn to false if e.preventPropagation() was called by one of the handlers
     dataAttr = dataAttr || 'data-href';
 
-    for (let c = document.getElementsByTagName("PRECUSTOMEVENT"), i = 0; i < c.length; i++)
-        cont = probeTarget(c[i]) !== false && cont;
+    for (let c = document.getElementsByTagName("PRE-CUSTOM-EVENT"), i = 0; i < c.length; i++) {
+        if (c[i].getAttribute("disabled") == null)
+            cont = probeTarget(c[i]) !== false && cont;
+    }
 
     if (cont) {
         for (let t = e.target; t != null; t = t.parentNode) {
@@ -23,8 +25,10 @@ exports.bkCustomEvents = function (element, e, dataAttr) {
     }
 
     if (cont) {
-        for (let c = document.getElementsByTagName("POSTCUSTOMEVENT"), i = 0; i < c.length; i++)
-            probeTarget(c[i]);
+        for (let c = document.getElementsByTagName("POST-CUSTOM-EVENT"), i = 0; i < c.length; i++) {
+            if (c[i].getAttribute("disabled") == null)
+                cont = probeTarget(c[i]) !== false && cont;
+        }
     }
 
     function probeTarget(t) {

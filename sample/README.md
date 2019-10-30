@@ -1,4 +1,4 @@
-# Exandr IPCam
+# Sample Scriptable app
 
 ## Assumptions
 

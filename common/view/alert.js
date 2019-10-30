@@ -17,8 +17,8 @@ function bkAlert(msg, opt = undefined) {
             if (e.target === this && e.type === "click" || e.type === "keydown" && e.which == 27) {
                     $($al[0].firstChild).trigger("close", { originalEvent: e }); // give user code chance to override
             }
-            else
-                bkCustomEvents(this, e);
+            else if (e.type === "click") // window handler expects clicks only
+                bkCustomEvents(this, e, 'data-href');
 
             e.stopPropagation(); // make the dialog modal (blocking)
 
