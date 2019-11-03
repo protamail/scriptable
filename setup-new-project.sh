@@ -10,7 +10,8 @@ if [[ $(dirname $1) != '.' ]]; then
     exit 1
 fi
 
-SDIR=$(dirname $0)
+cd $(dirname $0)
+SDIR=`pwd`
 
 mkdir "../$1" && cd "../$1" && git init &&
     # Scriptable dependencies
