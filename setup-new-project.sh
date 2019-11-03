@@ -5,7 +5,7 @@ if [[ ! $1 ]]; then
     exit 1
 fi
 
-if [[ $(dirname $1) != '.']]; then
+if [[ $(dirname $1) != '.' ]]; then
     echo "Error: new-project-name should not include any path"
     exit 1
 fi
