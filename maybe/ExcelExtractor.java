@@ -18,7 +18,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 import org.mozilla.javascript.Context;
-import org.scriptable.RhinoHttpRequest;
+import org.scriptable.ScriptableHttpRequest;
 import org.scriptable.ScriptableMap;
 
 import org.xml.sax.SAXException;
@@ -83,7 +83,7 @@ public final class ExcelExtractor {
         }
 
         return (List<ScriptableMap>)
-            Context.getCurrentContext().newArray(RhinoHttpRequest.getGlobalScope(), result.toArray());
+            Context.getCurrentContext().newArray(ScriptableHttpRequest.getGlobalScope(), result.toArray());
     }
 
     private static final class SheetHandler extends DefaultHandler {

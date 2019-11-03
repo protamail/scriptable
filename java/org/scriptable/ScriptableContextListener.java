@@ -1,7 +1,7 @@
 package org.scriptable;
 
 /**
- * Rhino servlet lifecycle listener
+ * Scriptable servlet lifecycle listener
  */
 
 import javax.servlet.annotation.WebListener;
@@ -11,21 +11,21 @@ import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 
 @WebListener // make it automatically discovered
-public final class RhinoContextListener implements ServletContextListener {
+public final class ScriptableContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {
-        synchronized(RhinoContextListener.class) {
+        synchronized(ScriptableContextListener.class) {
 
             for (ExecutorService es: executors) {
                 es.shutdownNow();
             }
             executors.clear();
 
-            for (RhinoHttpRequest.JobQueue jq: jobQueues) {
+            for (ScriptableHttpRequest.JobQueue jq: jobQueues) {
                 jq.shutdown();
             }
             jobQueues.clear();
@@ -45,12 +45,12 @@ public final class RhinoContextListener implements ServletContextListener {
         executors.remove(es);
     }
 
-    private static HashSet<RhinoHttpRequest.JobQueue> jobQueues = new HashSet<RhinoHttpRequest.JobQueue>();
+    private static HashSet<ScriptableHttpRequest.JobQueue> jobQueues = new HashSet<ScriptableHttpRequest.JobQueue>();
 
-    public static synchronized void registerJobQueue(RhinoHttpRequest.JobQueue jq) {
+    public static synchronized void registerJobQueue(ScriptableHttpRequest.JobQueue jq) {
         jobQueues.add(jq);
     }
 
-//    public final static class JobQueue { <- move to rhinohttprequest, also initialize originating request object in the job thread so _r.r is available
+//    public final static class JobQueue { <- move to ScriptableHttpRequest, also initialize originating request object in the job thread so _r.r is available
 }
 

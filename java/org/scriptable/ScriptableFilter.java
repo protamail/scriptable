@@ -8,15 +8,15 @@ import javax.servlet.ServletContext;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.scriptable.RhinoHttpRequest;
+import org.scriptable.ScriptableHttpRequest;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
 
-// This is an alternative way to implement Scriptable library to the usual RhinoServlet way
+// This is an alternative way to implement Scriptable library to the usual ScriptableServlet way
 // It may be required when Scriptable is combined with other similar frameworks where each one
 // is responsible for only part of the whole app.
-public class RhinoFilter implements Filter {
+public class ScriptableFilter implements Filter {
     static ServletContext srv;
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain filterChain)
@@ -24,7 +24,7 @@ public class RhinoFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest)req;
         HttpServletResponse response = (HttpServletResponse)res;
 
-        new RhinoHttpRequest(srv, request, response).keepQuietOn404().handleRequest();
+        new ScriptableHttpRequest(srv, request, response).keepQuietOn404().handleRequest();
 
         if (response.getStatus() == 404) {
             response.setStatus(200);
