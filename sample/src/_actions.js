@@ -1,6 +1,6 @@
 const conf = require("init.js");
 const model = require(`${conf.appdir}/_model.js`);
-const ipcam = require(`${conf.appdir}/_actions.js`);
+const app = require(`${conf.appdir}/_actions.js`);
 const view = require(`${conf.appdir}/@view.js`);
 
 function getSession(sessionId, userId) {
@@ -48,10 +48,10 @@ exports["__default__"] = function(r, p, t) {
     }
 
     t.session = session;
-    t.title = "IPCAM";
+    t.title = "Sample Scriptable app";
 
     t.doLog = true;
-    return r.dispatchOn(ipcam);
+    return r.dispatchOn(app);
 };
 
 exports["__after__"] = function(r, p, t, respSoFar) {

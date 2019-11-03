@@ -48,7 +48,8 @@ exports.runLessCompileTask = sync(function(baseName) {
     var dataLastModified = _r.getMostRecentModified(files);
     var output = _r.config[baseName+'.output'];
 
-    if (dataLastModified > Files.getLastModified(output)) {
+    // at least create output dir/file, so tomcat has access to it in dev
+    if (!dataLastModified || dataLastModified > Files.getLastModified(output)) {
         _r.clearSourceFileListCache(baseName);
         files = _r.listSourceFilesCached(baseName);
 

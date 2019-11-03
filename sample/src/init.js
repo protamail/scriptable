@@ -22,7 +22,7 @@ exports["__beforeJsReload__"] = function() {
 };
 
 exports.mailProperties = {
-    mail_from: '"Site" <aprotasenko@bkmks.com>',
+    mail_from: '"Sample app" <sample@scriptable.org>',
     mail_smtp_host: 'localhost',
     mail_smtp_port: 25,
     mail_smtp_timeout: 2000
