@@ -5,7 +5,12 @@ if [[ ! $1 ]]; then
     exit 1
 fi
 
-SDIR=`pwd`
+if [[ $(dirname $1) != '.']]; then
+    echo "Error: new-project-name should not include any path"
+    exit 1
+fi
+
+SDIR=$(dirname $0)
 
 mkdir "../$1" && cd "../$1" && git init &&
     # Scriptable dependencies
