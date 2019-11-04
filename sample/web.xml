@@ -6,17 +6,17 @@
          http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
          version="2.4">
 
-    <description>Exandr ipcam</description>
-    <display-name>Exandr</display-name>
+    <description>Sample Scriptable app</description>
+    <display-name>Sample</display-name>
 
     <servlet>
-        <servlet-name>RhinoServlet</servlet-name>
-        <servlet-class>org.scriptable.RhinoServlet</servlet-class>
+        <servlet-name>ScriptableServlet</servlet-name>
+        <servlet-class>org.scriptable.ScriptableServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>RhinoServlet</servlet-name>
+        <servlet-name>ScriptableServlet</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
 

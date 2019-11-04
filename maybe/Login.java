@@ -1,6 +1,6 @@
 package model.extra;
 
-import org.scriptable.RhinoHttpRequest;
+import org.scriptable.ScriptableHttpRequest;
 import javax.servlet.http.Cookie;
 import esGateKeeper.esGateKeeper;
 import java.net.URLEncoder;
@@ -21,7 +21,7 @@ public class Login {
         return attuid;
     }
 
-    public Login(RhinoHttpRequest r, String from) throws IOException {
+    public Login(ScriptableHttpRequest r, String from) throws IOException {
         String ess = r.getPlainCookieValue("attESSec");
         String eshr = r.getPlainCookieValue("attESHr");
         if (ess != null) {
@@ -57,8 +57,8 @@ public class Login {
             boolean gl = false;
             try {
                 gl = new GLogin.loginHr("", r.getHttpServletRequest(), r.getHttpServletResponse(),
-                        RhinoHttpRequest.getCurrentInstance().getHostRequestUrl(),
-                        RhinoHttpRequest.isDevelopmentMode() ? "test" : "prod", "", "", from)
+                        ScriptableHttpRequest.getCurrentInstance().getHostRequestUrl(),
+                        ScriptableHttpRequest.isDevelopmentMode() ? "test" : "prod", "", "", from)
                     .get_result();
             }
             catch (Exception e) {
@@ -77,7 +77,7 @@ public class Login {
     public String getLastName() { return lastName; }
 
     public static String getEncodedUrl() throws IOException {
-        return URLEncoder.encode(RhinoHttpRequest.getCurrentInstance().getHostRequestUrl(), "US-ASCII");
+        return URLEncoder.encode(ScriptableHttpRequest.getCurrentInstance().getHostRequestUrl(), "US-ASCII");
     }
 }
 

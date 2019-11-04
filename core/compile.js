@@ -118,7 +118,8 @@ exports.runClientJsTranspileTask = sync(function(baseName, opt) {
     var output = conf[baseName + '.output'];
     var outFile = Files.getFile(output);
 
-    if (dataLastModified > Files.getLastModified(outFile)) {
+    // at least create output dir/file, so tomcat has access to it in dev
+    if (!dataLastModified || dataLastModified > Files.getLastModified(outFile)) {
         Files.mkdirs(outFile, true); // writable by all
         exports.clearSourceFileListCache(baseName);
         var updatedFiles = listUpdatedFiles();  // will get all files

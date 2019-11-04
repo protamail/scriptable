@@ -19,7 +19,7 @@ public class SoyStringOutput {
             for (Object v: vv) {
                 if (v instanceof Function) {
                     writeOut();
-                    org.scriptable.RhinoHttpRequest.callJsFunction((Function)v, this);
+                    org.scriptable.ScriptableHttpRequest.callJsFunction((Function)v, this);
                 }
                 else if (v instanceof CharSequence)
                     sb.append((CharSequence)v);
@@ -30,7 +30,7 @@ public class SoyStringOutput {
         }
         else if (vv.length == 1) {
             if (vv[0] instanceof Function)
-                org.scriptable.RhinoHttpRequest.callJsFunction((Function)vv[0], this);
+                org.scriptable.ScriptableHttpRequest.callJsFunction((Function)vv[0], this);
             else {
                 httpWriter.write(vv[0].toString());
                 httpWriter.flush();

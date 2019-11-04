@@ -36,7 +36,7 @@
             <fileset dir="${srcdir}" includes="*.properties" />
             <fileset dir="${srcdir}/scriptable" includes="*.properties" />
         </copy>
-        <copy todir="${webinfdir}" failonerror="false">
+        <copy todir="${webinfdir}" failonerror="false" quiet="true">
             <fileset dir="${srcdir}/webinfextra" includes="**" />
         </copy>
     </target>
@@ -182,8 +182,8 @@
     </target>
 
     <target name="compile-scriptable-java">
-        <javac includeantruntime="false" target="1.8" srcdir="${srcdir}/scriptable/java"
-            destdir="${classesdir}" classpathref="build-classpath" debug="off">
+        <javac includeantruntime="false" target="1.8" srcdir="${srcdir}/scriptable/javasrc"
+            destdir="${classesdir}" classpathref="build-classpath" debug="on">
             <compilerarg value="-Xlint:deprecation" />
             <compilerarg value="-Xlint:unchecked" />
         </javac>
@@ -193,10 +193,10 @@
     </target>
 
     <target name="compile-java">
-        <javac includeantruntime="false" target="1.8" srcdir="${srcdir}/java"
-            destdir="${classesdir}" classpathref="build-classpath" debug="off">
-            <!--compilerarg value="-Xlint:deprecation" />
-            <compilerarg value="-Xlint:unchecked" /-->
+        <javac includeantruntime="false" target="1.8" srcdir="${srcdir}/javasrc"
+            destdir="${classesdir}" classpathref="build-classpath" debug="on">
+            <compilerarg value="-Xlint:deprecation" />
+            <compilerarg value="-Xlint:unchecked" />
         </javac>
     </target>
 

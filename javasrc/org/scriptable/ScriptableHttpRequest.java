@@ -1,7 +1,7 @@
 package org.scriptable;
 
 /**
- * The Rhino javascript runtime access
+ * The Scriptable javascript runtime access
  *
  * This class is used to process HTTP requests using javascript code
  */
@@ -10,6 +10,7 @@ import org.scriptable.util.Files;
 import org.scriptable.util.Json;
 import org.scriptable.util.Jdbc;
 import org.scriptable.util.Resources;
+import org.scriptable.ScriptableFilter;
 import org.scriptable.template.TemplateUtil;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
@@ -58,7 +59,7 @@ import org.mozilla.javascript.WrappedException;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
-public final class RhinoHttpRequest extends HttpRequest implements Callable {
+public final class ScriptableHttpRequest extends HttpRequest implements Callable {
     Thread requestThread = null;
     Throwable asyncException = null;
     private static ScriptableMap config;
@@ -92,13 +93,13 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
         ScriptableMap c = new ScriptableMap("Settings from scriptable.properties");
 
         try {
-            Enumeration<URL> pf = RhinoHttpRequest.class.getClassLoader()
+            Enumeration<URL> pf = ScriptableHttpRequest.class.getClassLoader()
                 .getResources("scriptable.properties");
 
             while (pf.hasMoreElements())
                 Files.loadPropertiesFromStream(c, pf.nextElement().openStream());
 
-            pf = RhinoHttpRequest.class.getClassLoader().getResources("mode.properties");
+            pf = ScriptableHttpRequest.class.getClassLoader().getResources("mode.properties");
 
             while (pf.hasMoreElements())
                 Files.loadPropertiesFromStream(c, pf.nextElement().openStream());
@@ -126,7 +127,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
         return config;
     }
 
-    private final static ThreadLocal<RhinoHttpRequest> requestInstance = new ThreadLocal<RhinoHttpRequest>();
+    private final static ThreadLocal<ScriptableHttpRequest> requestInstance = new ThreadLocal<ScriptableHttpRequest>();
     private final static ThreadLocal<Locale> locale = new ThreadLocal<Locale>();
 
     /**
@@ -144,14 +145,29 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
     // make older than non-existent file
     static long initLastModified = -1, configPropertiesLastModified = -1;
 
-    public RhinoHttpRequest(ServletContext srv, HttpServletRequest req, HttpServletResponse res)
+    public ScriptableHttpRequest(ServletContext srv, HttpServletRequest req, HttpServletResponse res)
         throws ServletException {
         super(srv, req, res);
     }
 
+    public ScriptableHttpRequest(ServletContext srv, HttpServletRequest req, HttpServletResponse res,
+            ScriptableFilter f) throws ServletException {
+        this(srv, req, res);
+        filter = f;
+    }
+
+    ScriptableFilter filter = null; // for use with ScriptableFilter
+
+    public String evalServletFilter() throws ServletException, IOException {
+        if (filter != null)
+            return filter.evalFilter();
+
+        return null;
+    }
+
     boolean quietOn404 = false;
 
-    public RhinoHttpRequest keepQuietOn404() {
+    public ScriptableHttpRequest keepQuietOn404() {
         quietOn404 = true;
 
         return this;
@@ -330,11 +346,11 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
         return callJsFunction(jsFunction, param);
     }
 
-    public static RhinoHttpRequest getCurrentRequest() {
-        RhinoHttpRequest r = requestInstance.get();
+    public static ScriptableHttpRequest getCurrentRequest() {
+        ScriptableHttpRequest r = requestInstance.get();
 
         if (r == null)
-            throw new RuntimeException("RhinoHttpRequest object is not available.");
+            throw new RuntimeException("ScriptableHttpRequest object is not available.");
 
         return r;
     }
@@ -400,9 +416,9 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
     }
 
     /**
-     * Get current RhinoHttpRequest instance
+     * Get current ScriptableHttpRequest instance
      */
-    public static RhinoHttpRequest getCurrentInstance() {
+    public static ScriptableHttpRequest getCurrentInstance() {
         return getCurrentRequest();
     }
 
@@ -416,7 +432,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
     /**
      * Run code in javascript environment
      */
-    public static Object runInJsEnv(RhinoHttpRequest request, Callable s) throws Exception {
+    public static Object runInJsEnv(ScriptableHttpRequest request, Callable s) throws Exception {
         requestInstance.set(request);
         setLocale(Locale.US); // reset to default locale
         Context cx = ContextFactory.getGlobal().enterContext();
@@ -432,7 +448,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
 
             if (globalScope == null) {
 
-                synchronized(RhinoHttpRequest.class) {
+                synchronized(ScriptableHttpRequest.class) {
 
                     if (globalScope == null) {
 
@@ -471,7 +487,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
         }
     }
 
-    public static Object runInJsEnv(final RhinoHttpRequest r, final Function func, final Object... param)
+    public static Object runInJsEnv(final ScriptableHttpRequest r, final Function func, final Object... param)
         throws Exception {
 
         return runInJsEnv(r, ()-> {
@@ -675,7 +691,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
 
             if (asyncPool == null) {
 
-                synchronized (RhinoHttpRequest.class) {
+                synchronized (ScriptableHttpRequest.class) {
 
                     if (asyncPool == null)
                         asyncPool = createCachedThreadPool();
@@ -685,7 +701,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
             pool = asyncPool;
         }
 //        final Condition asyncTaskHasAcquiredLock = jsLock.newCondition();
-        final RhinoHttpRequest r = this;
+        final ScriptableHttpRequest r = this;
 
         final Future task = pool.submit(() -> {
 
@@ -805,7 +821,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
     public static NativeJavaClass get_r() { // scriptable request class
 
         if (_r == null) {
-            _r = new NativeJavaClass(globalScope, RhinoHttpRequest.class) {
+            _r = new NativeJavaClass(globalScope, ScriptableHttpRequest.class) {
 
                 @Override
                 public boolean has(String name, Scriptable start) {
@@ -856,7 +872,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
 
     public void sendErrorResponse(Throwable e, String errorDetails) {
 
-        // if RhinoFilter is used to handle some of the requests, while letting others to be
+        // if ScriptableFilter is used to handle some of the requests, while letting others to be
         // handled down the filter chain, -- it may be necessary to not send anything to the client
         // in case of error, otherwise IllegalStateException may result (getOutputStream vs getWriter)
         if (quietOn404 && getStatus() == HttpServletResponse.SC_NOT_FOUND)
@@ -1193,7 +1209,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
 
         public JobQueue(int capacity) {
             jobs = new LinkedBlockingQueue<Callable>(capacity);
-            RhinoContextListener.registerJobQueue(this);
+            ScriptableContextListener.registerJobQueue(this);
 
             queueThread = new Thread(()-> {
 
@@ -1226,7 +1242,7 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
             jobs.offer(func);
         }
 
-        public void push(final RhinoHttpRequest r, final Function func, final Object... param) {
+        public void push(final ScriptableHttpRequest r, final Function func, final Object... param) {
 
             if (!queueThread.isAlive())
                 queueThread.start();
@@ -1251,10 +1267,10 @@ public final class RhinoHttpRequest extends HttpRequest implements Callable {
     public final static class JobQueueBuffer {
 
         final List<Callable> jobs = new ArrayList<Callable>();
-        final RhinoHttpRequest r;
+        final ScriptableHttpRequest r;
         final JobQueue realJQ;
 
-        public JobQueueBuffer(RhinoHttpRequest r, JobQueue realJQ) {
+        public JobQueueBuffer(ScriptableHttpRequest r, JobQueue realJQ) {
             this.r = r;
             this.realJQ = realJQ;
         }

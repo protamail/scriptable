@@ -12,7 +12,7 @@ import java.util.TimeZone;
 import java.util.Locale;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.scriptable.RhinoHttpRequest;
+import org.scriptable.ScriptableHttpRequest;
 import org.scriptable.ScriptableThing;
 import org.scriptable.HttpRequest;
 import org.mozilla.javascript.Scriptable;
@@ -43,7 +43,7 @@ public final class TemplateUtil {
         /**
          * Clear cached formats after each task/request (avoid tomcat leak warnings)
          */
-        RhinoHttpRequest.threadLocalPerTaskCleaner.register(()-> {
+        ScriptableHttpRequest.threadLocalPerTaskCleaner.register(()-> {
             HashMap<String, FormatTuple> loCache = loCacheTL.get();
 
             if (loCache != null)
@@ -133,7 +133,7 @@ public final class TemplateUtil {
 
             // Note: we don't care if locale changes for different requests
             // since we cache formats for request duration only
-            Locale locale = RhinoHttpRequest.getLocale();
+            Locale locale = ScriptableHttpRequest.getLocale();
 
             switch (f[0]) {
                 case "decimal":

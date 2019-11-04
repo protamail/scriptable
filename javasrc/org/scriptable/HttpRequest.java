@@ -131,7 +131,7 @@ public abstract class HttpRequest
             contextPath = req.getContextPath();
             cookiePath = contextPath;
             staticsInitialized = true;
-            // documenRoot is being set in RhinoServlet.init
+            // documenRoot is being set in ScriptableServlet.init
         }
 
         // force initialization of some properties which are useful for async access logging
@@ -443,7 +443,7 @@ public abstract class HttpRequest
         return "\n";
     }
 
-    public ServletContext getRhinoServlet() {
+    public ServletContext getScriptableServlet() {
         return servlet;
     }
 
@@ -595,24 +595,24 @@ public abstract class HttpRequest
 
     public static ExecutorService createCachedThreadPool() {
         ExecutorService es = Executors.newCachedThreadPool();
-        RhinoContextListener.registerThreadPool(es);
+        ScriptableContextListener.registerThreadPool(es);
         return es;
     }
 
     public static ExecutorService createFixedThreadPool(int capacity) {
         ExecutorService es = Executors.newFixedThreadPool(capacity);
-        RhinoContextListener.registerThreadPool(es);
+        ScriptableContextListener.registerThreadPool(es);
         return es;
     }
 
     public static ScheduledExecutorService createSingleThreadScheduledExecutor() {
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-        RhinoContextListener.registerThreadPool(es);
+        ScriptableContextListener.registerThreadPool(es);
         return es;
     }
 
     public static void destroyThreadPool(ExecutorService es) {
-        RhinoContextListener.unregisterThreadPool(es);
+        ScriptableContextListener.unregisterThreadPool(es);
         es.shutdownNow();
     }
 

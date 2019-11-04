@@ -1,7 +1,7 @@
 package org.scriptable;
 
 /**
- * The servlet implementation using RhinoHttpRequest as the request handler
+ * The servlet implementation using ScriptableHttpRequest as the request handler
  */
 
 import javax.servlet.http.HttpServlet;
@@ -12,13 +12,13 @@ import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.ServletException;
 
 @MultipartConfig
-public class RhinoServlet extends HttpServlet {
+public class ScriptableServlet extends HttpServlet {
     @Override
     protected void service(final HttpServletRequest request, final HttpServletResponse response)
         throws ServletException {
         // for websocket
         // request.getSession();
-        new RhinoHttpRequest(getServletContext(), request, response).handleRequest();
+        new ScriptableHttpRequest(getServletContext(), request, response).handleRequest();
     }
 
     @Override

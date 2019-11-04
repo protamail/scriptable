@@ -5,7 +5,7 @@ import javax.websocket.server.ServerApplicationConfig;
 import javax.websocket.Endpoint;
 import java.util.Set;
 import java.util.HashSet;
-import org.scriptable.RhinoHttpRequest;
+import org.scriptable.ScriptableHttpRequest;
 
 public class WsServerConfig implements ServerApplicationConfig {
 
@@ -13,7 +13,7 @@ public class WsServerConfig implements ServerApplicationConfig {
     public Set<ServerEndpointConfig> getEndpointConfigs(Set<Class<? extends Endpoint>> endpointClasses) {
         Set<ServerEndpointConfig> result = new HashSet<>();
 
-        if (RhinoHttpRequest.isDevelopmentMode()) { // deploy watcher endpoint in dev only
+        if (ScriptableHttpRequest.isDevelopmentMode()) { // deploy watcher endpoint in dev only
 
             for (Class ep: endpointClasses) {
 

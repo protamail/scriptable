@@ -1,7 +1,6 @@
 package org.scriptable.util;
 
 import org.scriptable.HttpRequest;
-import org.scriptable.RhinoHttpRequest;
 import org.scriptable.ScriptableMap;
 import java.io.File;
 import java.io.StringReader;

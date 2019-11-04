@@ -8,7 +8,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.ArrayList;
-import org.scriptable.RhinoHttpRequest;
+import org.scriptable.ScriptableHttpRequest;
 
 import java.io.IOException;
 
@@ -34,7 +34,7 @@ public final class JavaProcess
 
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome + "/bin/java";
-        String docRoot = RhinoHttpRequest.getDocumentRoot();
+        String docRoot = ScriptableHttpRequest.getDocumentRoot();
         String classpath = System.getProperty("java.class.path") + ":" + docRoot + "WEB-INF/classes";
         classpath = addFilesToClasspath(docRoot + "../lib", classpath);
         classpath = addFilesToClasspath(docRoot + "../lib/build", classpath);

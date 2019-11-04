@@ -4,7 +4,7 @@ package org.scriptable;
  * Create some javascript types out of primitive components.
  * 
  * These utility methods can be used to create instances which will be recognized
- * by Rhino runtime as the corresponding javascript native types
+ * by Scriptable runtime as the corresponding javascript native types
  */
 
 import java.util.Date;
@@ -62,10 +62,10 @@ public class JavaObjectFactory
     }
 
     /**
-     * Create Rhino JS array out of java array
+     * Create Scriptable JS array out of java array
      */
     public static Scriptable createJsArray(Object[] a) {
-        return Context.getCurrentContext().newArray(RhinoHttpRequest.getGlobalScope(), a);
+        return Context.getCurrentContext().newArray(ScriptableHttpRequest.getGlobalScope(), a);
     }
 }
 
