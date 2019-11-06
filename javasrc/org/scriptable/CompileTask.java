@@ -7,7 +7,6 @@ import java.io.Serializable;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import org.scriptable.HttpRequest;
-import org.scriptable.ScriptableHttpRequest;
 import org.scriptable.util.Files;
 import org.scriptable.util.JavaProcess;
 

@@ -25,7 +25,7 @@ public final class ScriptableContextListener implements ServletContextListener {
             }
             executors.clear();
 
-            for (ScriptableHttpRequest.JobQueue jq: jobQueues) {
+            for (ScriptableRequest.JobQueue jq: jobQueues) {
                 jq.shutdown();
             }
             jobQueues.clear();
@@ -45,12 +45,12 @@ public final class ScriptableContextListener implements ServletContextListener {
         executors.remove(es);
     }
 
-    private static HashSet<ScriptableHttpRequest.JobQueue> jobQueues = new HashSet<ScriptableHttpRequest.JobQueue>();
+    private static HashSet<ScriptableRequest.JobQueue> jobQueues = new HashSet<ScriptableRequest.JobQueue>();
 
-    public static synchronized void registerJobQueue(ScriptableHttpRequest.JobQueue jq) {
+    public static synchronized void registerJobQueue(ScriptableRequest.JobQueue jq) {
         jobQueues.add(jq);
     }
 
-//    public final static class JobQueue { <- move to ScriptableHttpRequest, also initialize originating request object in the job thread so _r.r is available
+//    public final static class JobQueue { <- move to ScriptableRequest, also initialize originating request object in the job thread so _r.r is available
 }
 

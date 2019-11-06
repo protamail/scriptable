@@ -9,9 +9,9 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import javax.servlet.ServletOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
-import org.scriptable.ScriptableHttpRequest;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -20,25 +20,13 @@ import javax.servlet.ServletException;
 // It may be required when Scriptable is combined with other similar frameworks where each one
 // is responsible for only part of the whole app.
 public class ScriptableFilter implements Filter {
+    // NOTE: any instance variables would be shared between different concurrent requests
     static ServletContext srv;
-    HttpServletRequest request = null;
-    HttpServletResponse response = null;
-    FilterChain filterChain = null;
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain f)
         throws IOException, ServletException {
-        try {
-            request = (HttpServletRequest)req;
-            response = (HttpServletResponse)res;
-            filterChain = f;
-            new ScriptableHttpRequest(srv, request, response, this).handleRequest();
-        }
-        finally {
-            request = null;
-            response = null;
-            filterChain = null;
-        }
-//        new ScriptableHttpRequest(srv, request, response).keepQuietOn404().handleRequest();
+        new ScriptableRequest(srv, (HttpServletRequest)req, (HttpServletResponse)res, f).handleRequest();
+//        new ScriptableRequest(srv, request, response).keepQuietOn404().handleRequest();
 
 //        if (response.getStatus() == 404) {
 //            response.setStatus(200);
@@ -46,14 +34,12 @@ public class ScriptableFilter implements Filter {
 //        }
     }
 
-    public String evalFilter() throws ServletException, IOException {
-        if (request != null) {
-            MyHttpServletResponseWrapper responseBuffer = new MyHttpServletResponseWrapper(response);
-            filterChain.doFilter(request, responseBuffer);
-            return responseBuffer.getContent();
-        }
-        else
-            return null;
+    public static String evalFilter(ServletRequest req, ServletResponse res, FilterChain f)
+        throws ServletException, IOException {
+        MyHttpServletResponseWrapper responseBuffer =
+            new MyHttpServletResponseWrapper((HttpServletResponse)res);
+        f.doFilter(req, responseBuffer);
+        return responseBuffer.getContent();
     }
 
     public static class MyHttpServletResponseWrapper extends HttpServletResponseWrapper {
@@ -71,6 +57,17 @@ public class ScriptableFilter implements Filter {
             }
             return writer;
         }
+
+/*        ServletOutputStream outputStream = null;
+
+        @Override
+        public javax.servlet.ServletOutputStream getOutputStream() throws IOException {
+//            if(outputStream == null){
+//                outputStream = new ByteArrayOutputStream(4096);
+//            }
+            return super.getOutputStream();
+        }
+*/
 
         public String getContent() throws IOException {
             getWriter().flush();

@@ -31,7 +31,7 @@ public class JavaMethodHandles
     public static JsFunction getR() {
         return new JsFunction() {
             @Override public Object call(Object[] args) throws Throwable {
-                return ScriptableHttpRequest.getR();
+                return ScriptableRequest.getR();
             }
         };
     }

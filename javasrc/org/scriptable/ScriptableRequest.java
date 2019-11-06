@@ -51,6 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.Part;
+import javax.servlet.FilterChain;
 
 import javax.servlet.ServletException;
 import org.mozilla.javascript.RhinoException;
@@ -59,7 +60,7 @@ import org.mozilla.javascript.WrappedException;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
-public final class ScriptableHttpRequest extends HttpRequest implements Callable {
+public final class ScriptableRequest extends HttpRequest implements Callable {
     Thread requestThread = null;
     Throwable asyncException = null;
     private static ScriptableMap config;
@@ -93,13 +94,13 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
         ScriptableMap c = new ScriptableMap("Settings from scriptable.properties");
 
         try {
-            Enumeration<URL> pf = ScriptableHttpRequest.class.getClassLoader()
+            Enumeration<URL> pf = ScriptableRequest.class.getClassLoader()
                 .getResources("scriptable.properties");
 
             while (pf.hasMoreElements())
                 Files.loadPropertiesFromStream(c, pf.nextElement().openStream());
 
-            pf = ScriptableHttpRequest.class.getClassLoader().getResources("mode.properties");
+            pf = ScriptableRequest.class.getClassLoader().getResources("mode.properties");
 
             while (pf.hasMoreElements())
                 Files.loadPropertiesFromStream(c, pf.nextElement().openStream());
@@ -127,7 +128,7 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
         return config;
     }
 
-    private final static ThreadLocal<ScriptableHttpRequest> requestInstance = new ThreadLocal<ScriptableHttpRequest>();
+    private final static ThreadLocal<ScriptableRequest> requestInstance = new ThreadLocal<ScriptableRequest>();
     private final static ThreadLocal<Locale> locale = new ThreadLocal<Locale>();
 
     /**
@@ -145,29 +146,29 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
     // make older than non-existent file
     static long initLastModified = -1, configPropertiesLastModified = -1;
 
-    public ScriptableHttpRequest(ServletContext srv, HttpServletRequest req, HttpServletResponse res)
+    public ScriptableRequest(ServletContext srv, HttpServletRequest req, HttpServletResponse res)
         throws ServletException {
         super(srv, req, res);
     }
 
-    public ScriptableHttpRequest(ServletContext srv, HttpServletRequest req, HttpServletResponse res,
-            ScriptableFilter f) throws ServletException {
+    public ScriptableRequest(ServletContext srv, HttpServletRequest req, HttpServletResponse res,
+            FilterChain f) throws ServletException {
         this(srv, req, res);
-        filter = f;
+        filterChain = f;
     }
 
-    ScriptableFilter filter = null; // for use with ScriptableFilter
+    FilterChain filterChain = null; // for use with ScriptableFilter
 
     public String evalServletFilter() throws ServletException, IOException {
-        if (filter != null)
-            return filter.evalFilter();
+        if (filterChain != null)
+            return ScriptableFilter.evalFilter(getHttpServletRequest(), getHttpServletResponse(), filterChain);
 
         return null;
     }
 
     boolean quietOn404 = false;
 
-    public ScriptableHttpRequest keepQuietOn404() {
+    public ScriptableRequest keepQuietOn404() {
         quietOn404 = true;
 
         return this;
@@ -346,11 +347,11 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
         return callJsFunction(jsFunction, param);
     }
 
-    public static ScriptableHttpRequest getCurrentRequest() {
-        ScriptableHttpRequest r = requestInstance.get();
+    public static ScriptableRequest getCurrentRequest() {
+        ScriptableRequest r = requestInstance.get();
 
         if (r == null)
-            throw new RuntimeException("ScriptableHttpRequest object is not available.");
+            throw new RuntimeException("ScriptableRequest object is not available.");
 
         return r;
     }
@@ -416,9 +417,9 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
     }
 
     /**
-     * Get current ScriptableHttpRequest instance
+     * Get current ScriptableRequest instance
      */
-    public static ScriptableHttpRequest getCurrentInstance() {
+    public static ScriptableRequest getCurrentInstance() {
         return getCurrentRequest();
     }
 
@@ -432,7 +433,7 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
     /**
      * Run code in javascript environment
      */
-    public static Object runInJsEnv(ScriptableHttpRequest request, Callable s) throws Exception {
+    public static Object runInJsEnv(ScriptableRequest request, Callable s) throws Exception {
         requestInstance.set(request);
         setLocale(Locale.US); // reset to default locale
         Context cx = ContextFactory.getGlobal().enterContext();
@@ -448,7 +449,7 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
 
             if (globalScope == null) {
 
-                synchronized(ScriptableHttpRequest.class) {
+                synchronized(ScriptableRequest.class) {
 
                     if (globalScope == null) {
 
@@ -487,7 +488,7 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
         }
     }
 
-    public static Object runInJsEnv(final ScriptableHttpRequest r, final Function func, final Object... param)
+    public static Object runInJsEnv(final ScriptableRequest r, final Function func, final Object... param)
         throws Exception {
 
         return runInJsEnv(r, ()-> {
@@ -691,7 +692,7 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
 
             if (asyncPool == null) {
 
-                synchronized (ScriptableHttpRequest.class) {
+                synchronized (ScriptableRequest.class) {
 
                     if (asyncPool == null)
                         asyncPool = createCachedThreadPool();
@@ -701,7 +702,7 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
             pool = asyncPool;
         }
 //        final Condition asyncTaskHasAcquiredLock = jsLock.newCondition();
-        final ScriptableHttpRequest r = this;
+        final ScriptableRequest r = this;
 
         final Future task = pool.submit(() -> {
 
@@ -821,7 +822,7 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
     public static NativeJavaClass get_r() { // scriptable request class
 
         if (_r == null) {
-            _r = new NativeJavaClass(globalScope, ScriptableHttpRequest.class) {
+            _r = new NativeJavaClass(globalScope, ScriptableRequest.class) {
 
                 @Override
                 public boolean has(String name, Scriptable start) {
@@ -1242,7 +1243,7 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
             jobs.offer(func);
         }
 
-        public void push(final ScriptableHttpRequest r, final Function func, final Object... param) {
+        public void push(final ScriptableRequest r, final Function func, final Object... param) {
 
             if (!queueThread.isAlive())
                 queueThread.start();
@@ -1267,10 +1268,10 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
     public final static class JobQueueBuffer {
 
         final List<Callable> jobs = new ArrayList<Callable>();
-        final ScriptableHttpRequest r;
+        final ScriptableRequest r;
         final JobQueue realJQ;
 
-        public JobQueueBuffer(ScriptableHttpRequest r, JobQueue realJQ) {
+        public JobQueueBuffer(ScriptableRequest r, JobQueue realJQ) {
             this.r = r;
             this.realJQ = realJQ;
         }

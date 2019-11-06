@@ -197,7 +197,7 @@ public final class ScriptableMap extends AbstractMap<String, Object> implements 
 
         if (has("__noSuchProperty__", start) &&
             get("__noSuchProperty__", start) instanceof Function) {
-            val = ScriptableHttpRequest.callJsFunction((Function)this.get("__noSuchProperty__", start), name);
+            val = ScriptableRequest.callJsFunction((Function)this.get("__noSuchProperty__", start), name);
         }
 
         // raise EcmaError which includes script context information
@@ -451,7 +451,7 @@ public final class ScriptableMap extends AbstractMap<String, Object> implements 
         if (func == null)
             throw ScriptRuntime.undefReadError(this.toString(), "()");
 
-        return ScriptableHttpRequest.callJsFunction(func, args);
+        return ScriptableRequest.callJsFunction(func, args);
     }
 
     @Override

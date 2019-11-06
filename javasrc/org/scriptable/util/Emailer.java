@@ -9,7 +9,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.InternetAddress;
-import org.scriptable.ScriptableHttpRequest;
+import org.scriptable.ScriptableRequest;
 
 import javax.mail.MessagingException;
 import java.io.UnsupportedEncodingException;
@@ -69,9 +69,9 @@ public final class Emailer
         bodyPart = new MimeBodyPart();
 
         if (htmlBody != null && !htmlBody.equals(""))
-            bodyPart.setContent(htmlBody, ScriptableHttpRequest.CONTENT_HTML);
+            bodyPart.setContent(htmlBody, ScriptableRequest.CONTENT_HTML);
         else
-            bodyPart.setContent(textBody, ScriptableHttpRequest.CONTENT_PLAIN);
+            bodyPart.setContent(textBody, ScriptableRequest.CONTENT_PLAIN);
 
         multi.addBodyPart(bodyPart);
 
