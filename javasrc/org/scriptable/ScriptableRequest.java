@@ -159,19 +159,12 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
 
     FilterChain filterChain = null; // for use with ScriptableFilter
 
-    public String evalServletFilter() throws ServletException, IOException {
+    public String evalServletFilterChain() throws ServletException, IOException {
         if (filterChain != null)
-            return ScriptableFilter.evalFilter(getHttpServletRequest(), getHttpServletResponse(), filterChain);
+            return ScriptableFilter.evalFilterChain(getHttpServletRequest(), getHttpServletResponse(),
+                    filterChain);
 
         return null;
-    }
-
-    boolean quietOn404 = false;
-
-    public ScriptableRequest keepQuietOn404() {
-        quietOn404 = true;
-
-        return this;
     }
 
     public static Scriptable getGlobalScope() {
@@ -872,12 +865,6 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
     }
 
     public void sendErrorResponse(Throwable e, String errorDetails) {
-
-        // if ScriptableFilter is used to handle some of the requests, while letting others to be
-        // handled down the filter chain, -- it may be necessary to not send anything to the client
-        // in case of error, otherwise IllegalStateException may result (getOutputStream vs getWriter)
-        if (quietOn404 && getStatus() == HttpServletResponse.SC_NOT_FOUND)
-            return;
 
         // if status code has already been changed, and it's not 404 (message generated below)
         // assume request was already finalized and aborted with a throw

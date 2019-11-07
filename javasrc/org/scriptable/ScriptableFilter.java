@@ -26,15 +26,9 @@ public class ScriptableFilter implements Filter {
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain f)
         throws IOException, ServletException {
         new ScriptableRequest(srv, (HttpServletRequest)req, (HttpServletResponse)res, f).handleRequest();
-//        new ScriptableRequest(srv, request, response).keepQuietOn404().handleRequest();
-
-//        if (response.getStatus() == 404) {
-//            response.setStatus(200);
-//            filterChain.doFilter(request, response);
-//        }
     }
 
-    public static String evalFilter(ServletRequest req, ServletResponse res, FilterChain f)
+    public static String evalFilterChain(ServletRequest req, ServletResponse res, FilterChain f)
         throws ServletException, IOException {
         MyHttpServletResponseWrapper responseBuffer =
             new MyHttpServletResponseWrapper((HttpServletResponse)res);
