@@ -20,7 +20,7 @@ __globalScope__.empty[Symbol.iterator] = function () {    // make it iterable (f
     return { next: function () { return { value: __globalScope__.empty, done: false } } };
 }
 
-__globalScope__._r = scriptable.ScriptableHttpRequest._r;
+__globalScope__._r = scriptable.ScriptableRequest._r;
 __globalScope__.log = _r.log;
 __globalScope__.logInfo = _r.logInfo;
 __globalScope__.logEvent = _r.logEvent;

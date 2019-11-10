@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
-import org.scriptable.ScriptableHttpRequest;
 import org.scriptable.util.Resources;
 
 import java.io.IOException;
@@ -42,7 +41,7 @@ public final class WsUpdateWatcher extends Endpoint {
             public void run() {
 
                 RemoteEndpoint.Basic remote = session.getBasicRemote();
-                Map config = ScriptableHttpRequest.getConfig();
+                Map config = ScriptableRequest.getConfig();
 
                 if (config == null)
                     return;
@@ -51,7 +50,7 @@ public final class WsUpdateWatcher extends Endpoint {
 
                     remote.sendText("instanceId=" + HttpRequest.instanceId); // let them know when webapp reloaded
 
-                    String p = ScriptableHttpRequest.CONF_TARGETS_PROP;
+                    String p = ScriptableRequest.CONF_TARGETS_PROP;
                     StringBuilder include = new StringBuilder("scriptable.properties");
 
                     if (config.containsKey(p)) {
@@ -70,7 +69,7 @@ public final class WsUpdateWatcher extends Endpoint {
                         }
                     }
                     else
-                        throw new Exception("Missing " + ScriptableHttpRequest.CONF_TARGETS_PROP +
+                        throw new Exception("Missing " + ScriptableRequest.CONF_TARGETS_PROP +
                                 " property in config");
 
                     if (session.isOpen()) {

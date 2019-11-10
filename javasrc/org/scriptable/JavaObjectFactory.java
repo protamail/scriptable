@@ -65,7 +65,7 @@ public class JavaObjectFactory
      * Create Scriptable JS array out of java array
      */
     public static Scriptable createJsArray(Object[] a) {
-        return Context.getCurrentContext().newArray(ScriptableHttpRequest.getGlobalScope(), a);
+        return Context.getCurrentContext().newArray(ScriptableRequest.getGlobalScope(), a);
     }
 }
 

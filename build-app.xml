@@ -15,7 +15,9 @@
     <property name="closure-compiler-jar" value="lib/scriptable-deps/build/closure-compiler.jar" />
     <property name="soy-compiler-jar" value="lib/scriptable-deps/build/SoyToJsSrcCompiler.jar" />
 
-    <target name="build"
+    <target name="build" depends="build-dev" />
+
+    <target name="build-dev"
         depends="init, init-dev-context, build-release, dev-reload" />
 
     <!-- we copy web.xml last, to avoid failed webapp reload due to missing class files -->
@@ -35,7 +37,7 @@
             <fileset dir="${srcdir}/scriptable" includes="*.properties" />
         </copy>
         <copy todir="${webinfdir}" failonerror="false" quiet="true">
-            <fileset dir="${basedir}/webinfextra" includes="**" />
+            <fileset dir="${srcdir}/webinfextra" includes="**" />
         </copy>
     </target>
 
@@ -72,6 +74,7 @@
     </target>
 
     <target name="copy-lib-build">
+        <!-- needed in running dev environment only -->
         <copy file="${soy-compiler-jar}" todir="${webinflibdir}" failonerror="false" />
         <copy file="${closure-compiler-jar}" todir="${webinflibdir}" failonerror="false" />
     </target>
@@ -171,11 +174,11 @@
     </target>
 
     <target name="check-gen-beans">
-        <available file="src/model/gen-beans.pl" property="gen-beans.exists" />
+        <available file="src/java/model/gen-beans.pl" property="gen-beans.exists" />
     </target>
 
     <target name="gen-beans" depends="check-gen-beans" if="gen-beans.exists">
-        <exec failonerror="true" executable="src/model/gen-beans.pl" />
+        <exec failonerror="true" executable="src/javasrc/model/gen-beans.pl" />
     </target>
 
     <target name="compile-scriptable-java">
@@ -205,18 +208,12 @@
     </target>
 
     <target name="create-war">
-        <property name="jar.includes" value="
-                ${war-assets}
-                WEB-INF/classes/**
-                WEB-INF/lib/*.jar
-                WEB-INF/resources/**
-                WEB-INF/common/**
-                WEB-INF/web.xml
-                WEB-INF/TESTING_MODE" />
         <uptodate targetfile="${warfile}" property="jar.uptodate">
             <srcfiles dir="${srcdir}" includes="${jar.includes}" />
         </uptodate>
-        <jar destfile="${warfile}" basedir="${srcdir}" includes="${jar.includes}" />
+        <jar destfile="${warfile}" basedir="${srcdir}"
+            includes="${war-assets} WEB-INF/**"
+            excludes="WEB-INF/transpiled/**" />
     </target>
 
     <target name="clean-build" depends="clean, build" />

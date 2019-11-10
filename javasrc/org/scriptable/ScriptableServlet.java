@@ -1,7 +1,7 @@
 package org.scriptable;
 
 /**
- * The servlet implementation using ScriptableHttpRequest as the request handler
+ * The servlet implementation using ScriptableRequest as the request handler
  */
 
 import javax.servlet.http.HttpServlet;
@@ -13,12 +13,13 @@ import javax.servlet.ServletException;
 
 @MultipartConfig
 public class ScriptableServlet extends HttpServlet {
+    // NOTE: any instance variables would be shared between different concurrent requests
     @Override
     protected void service(final HttpServletRequest request, final HttpServletResponse response)
         throws ServletException {
         // for websocket
         // request.getSession();
-        new ScriptableHttpRequest(getServletContext(), request, response).handleRequest();
+        new ScriptableRequest(getServletContext(), request, response).handleRequest();
     }
 
     @Override

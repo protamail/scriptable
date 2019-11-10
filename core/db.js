@@ -5,7 +5,7 @@
 var JavaObjectFactory = scriptable.JavaObjectFactory;
 exports.date = JavaObjectFactory.createDate;
 exports.number = JavaObjectFactory.createDouble;
-//exports.arrContext.getCurrentContext().newArray(ScriptableHttpRequest.getGlobalScope(),
+//exports.arrContext.getCurrentContext().newArray(ScriptableRequest.getGlobalScope(),
 
 exports.nullifyUndef = function(o) {
     // force null value as opposed to "undefined"

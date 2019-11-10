@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import org.scriptable.HttpRequest;
-import org.scriptable.ScriptableHttpRequest;
 import org.scriptable.util.Files;
 import org.scriptable.util.JavaProcess;
 import org.mozilla.javascript.Scriptable;
@@ -81,7 +80,7 @@ public class ScriptableCompileTask implements Callable {
 
         opt.put("compilationMode", true);
 
-        return ScriptableHttpRequest.callJsFunction(jsModuleName, jsFunctionName, basePropertyName, opt);
+        return ScriptableRequest.callJsFunction(jsModuleName, jsFunctionName, basePropertyName, opt);
     }
 
     public void execute() {
@@ -93,8 +92,8 @@ public class ScriptableCompileTask implements Callable {
                     documentRoot == null)
                 throw new RuntimeException("jsModuleName, jsFunctionName, documentRoot, and basePropertyName must be specified");
 
-            ScriptableHttpRequest.setCompilationMode(true);
-            ScriptableHttpRequest.runInJsEnv(null, this);
+            ScriptableRequest.setCompilationMode(true);
+            ScriptableRequest.runInJsEnv(null, this);
         }
         catch (Exception e) {
             HttpRequest.logError(e.getMessage());

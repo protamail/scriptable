@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.locks.Lock;
-import org.scriptable.ScriptableHttpRequest;
+import org.scriptable.ScriptableRequest;
 import org.scriptable.ScriptableMap;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -38,7 +38,7 @@ public final class Jdbc
     private boolean keepConnAlive = false;
     private boolean camelize = false;
     private JdbcDataSourceConfig dsConfig = null;
-    private ScriptableHttpRequest rhr = ScriptableHttpRequest.getCurrentRequest();
+    private ScriptableRequest rhr = ScriptableRequest.getCurrentRequest();
     HashMap<JdbcDataSourceConfig, Connection> ccached = null;
     private final static ThreadLocal<HashMap<JdbcDataSourceConfig, Connection>> ccache =
         new ThreadLocal<HashMap<JdbcDataSourceConfig, Connection>>();
@@ -47,7 +47,7 @@ public final class Jdbc
         /**
          * Close and clear all cached connections for the current task/request
          */
-        ScriptableHttpRequest.threadLocalPerTaskCleaner.register(()-> {
+        ScriptableRequest.threadLocalPerTaskCleaner.register(()-> {
             HashMap<JdbcDataSourceConfig, Connection> ccached = ccache.get();
 
             if (ccached != null) {
@@ -226,7 +226,7 @@ public final class Jdbc
     NativeArray getEmptyList() {
 
         if (emptyList == null)
-            emptyList = (NativeArray)Context.getCurrentContext().newArray(ScriptableHttpRequest.getGlobalScope(),
+            emptyList = (NativeArray)Context.getCurrentContext().newArray(ScriptableRequest.getGlobalScope(),
                         new ScriptableMap[0]);
 
         return emptyList;
@@ -392,7 +392,7 @@ public final class Jdbc
                 root.add(new ScriptableMap(ci.keys, new Object[ncol], true));
 
             return (NativeArray)
-                Context.getCurrentContext().newArray(ScriptableHttpRequest.getGlobalScope(), root.toArray());
+                Context.getCurrentContext().newArray(ScriptableRequest.getGlobalScope(), root.toArray());
         }
         catch (SQLException ie) {
 
@@ -555,7 +555,7 @@ public final class Jdbc
 /*    public Exception handleError(Function errorHandler, Exception ex) throws InterruptedException {
         try {
             rhr.lockJS();
-            ScriptableHttpRequest.callJsFunction(errorHandler, ex);
+            ScriptableRequest.callJsFunction(errorHandler, ex);
             return null;
         }
         catch (Exception e) {
@@ -568,14 +568,14 @@ public final class Jdbc
 
     long beginTS = 0;
     final private void startTimer() {
-        if (ScriptableHttpRequest.isDevelopmentMode()) {
+        if (ScriptableRequest.isDevelopmentMode()) {
             beginTS = System.currentTimeMillis();
         }
     }
 
     final private void reportTimer(String sql) {
-        if (ScriptableHttpRequest.isDevelopmentMode()) {
-            ScriptableHttpRequest.logInfo((System.currentTimeMillis() - beginTS) + "ms for: " + sql);
+        if (ScriptableRequest.isDevelopmentMode()) {
+            ScriptableRequest.logInfo((System.currentTimeMillis() - beginTS) + "ms for: " + sql);
         }
     }
 
