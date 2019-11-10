@@ -1,24 +1,24 @@
 @font-face {
     font-family: 'open_sans';
-    src: url('static/fonts/opensans-regular.woff') format('woff');
+    src: url('@{staticdir}/fonts/opensans-regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 @font-face {
     font-family: 'open_sans';
-    src: url('static/fonts/opensans-italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/opensans-italic.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 @font-face {
     font-family: 'open_sans';
-    src: url('static/fonts/opensans-bold.woff') format('woff');
+    src: url('@{staticdir}/fonts/opensans-bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 @font-face {
     font-family: 'open_sans';
-    src: url('static/fonts/opensans-bolditalic.woff') format('woff');
+    src: url('@{staticdir}/fonts/opensans-bolditalic.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }

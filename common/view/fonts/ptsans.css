@@ -1,55 +1,55 @@
 @font-face {
     font-family: 'pt_sans';
-    src: url('static/fonts/ptsans-regular.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptsans-regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans';
-    src: url('static/fonts/ptsans-italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptsans-italic.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'pt_sans';
-    src: url('static/fonts/ptsans-bold.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptsans-bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans';
-    src: url('static/fonts/ptsans-bolditalic.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptsans-bolditalic.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'pt_sans_caption';
-    src: url('static/fonts/ptsans-caption.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptsans-caption.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans_caption';
-    src: url('static/fonts/ptsans-captionbold.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptsans-captionbold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans_narrow';
-    src: url('static/fonts/ptsans-narrow.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptsans-narrow.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans_narrow';
-    src: url('static/fonts/ptsans-narrowbold.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptsans-narrowbold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
@@ -57,56 +57,56 @@
 /* Use Clear Sans as light and thin versions of PT Sans/Caption */
 @font-face {
     font-family: 'pt_sans';
-    src: url('static/fonts/ClearSans-Light.woff') format('woff');
+    src: url('@{staticdir}/fonts/ClearSans-Light.woff') format('woff');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans';
-    src: url('static/fonts/ClearSans-Thin.woff') format('woff');
+    src: url('@{staticdir}/fonts/ClearSans-Thin.woff') format('woff');
     font-weight: 200;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans';
-    src: url('static/fonts/ClearSans-Italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/ClearSans-Italic.woff') format('woff');
     font-weight: 300;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'pt_sans';
-    src: url('static/fonts/ClearSans-Italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/ClearSans-Italic.woff') format('woff');
     font-weight: 200;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'pt_sans_caption';
-    src: url('static/fonts/ClearSans-Light.woff') format('woff');
+    src: url('@{staticdir}/fonts/ClearSans-Light.woff') format('woff');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans_caption';
-    src: url('static/fonts/ClearSans-Thin.woff') format('woff');
+    src: url('@{staticdir}/fonts/ClearSans-Thin.woff') format('woff');
     font-weight: 200;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'pt_sans_caption';
-    src: url('static/fonts/ClearSans-Italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/ClearSans-Italic.woff') format('woff');
     font-weight: 300;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'pt_sans_caption';
-    src: url('static/fonts/ClearSans-Italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/ClearSans-Italic.woff') format('woff');
     font-weight: 200;
     font-style: italic;
 }

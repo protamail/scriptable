@@ -1,3 +1,5 @@
+/* NOTE: inclusion is alpha ordered, hence file name starts with underscore */
+
 "use strict";
 
 /*! cash-dom 1.3.5, https://github.com/kenwheeler/cash @license MIT */

@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -155,8 +155,7 @@ final public class Resources
                             continue nextPath;
                     }
 
-                    if (path.getFileName().toString().charAt(0) != '.') // don't include hidden/emacs tmp
-                        result.add(path.toString());
+                    result.add(path.toString()); // paths already don't include hidden/emacs tmp
                 }
             }
         }
@@ -201,13 +200,14 @@ final public class Resources
         Collections.sort(list); // sort alphabetically to get repeatable order
         // list depth first, so sub-directory content is listed before the files
         for (File f: list) {
-            if (f.isDirectory() && f.getName().charAt(0) != '.') // skip hidden directories, e.g. .git
+            if (f.isDirectory() && !f.isHidden()) // skip hidden directories, e.g. .git
                 listFilesRecursively(result, f);
         }
         for (File f: list) {
-            if (!f.isDirectory())
+            if (!f.isDirectory() && !f.isHidden()) {
                 // Note: don't use getCanonicalPath here since it'll confuse matchers in case of symlink
                 result.add(new File(f.toString().substring(rl)).toPath());
+            }
         }
         return result;
     }
@@ -238,27 +238,47 @@ final public class Resources
         final WatchService watcher = FileSystems.getDefault().newWatchService();
         HashMap<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
         boolean result = false;
-        Path root = getRootPath();
+        String root = getRootPath().toString();
+        int rootl = root.length();
+        PathMatcher[] matchers = getPathMatchers(include);
 
         try {
 
-            java.nio.file.Files.walkFileTree(root, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-                    Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
+System.out.println("====================");
+            // NOTE: Files.walkFileTree is not suitable since it's not strictly depth-first
+            // meaning it doesn't guarantee visiting directories before any of the sibling files
+            ArrayList<Path> files = new ArrayList<Path>();
+            listFilesRecursively(files, getRootPath().toFile());
+            Path parentRegistered = null;
 
-                        @Override
-                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                            throws IOException { // adding all directories to inotify watch list
+            for (Path file: files) {
+                if (pathMatches(file, matchers)) {
+                    file = new File(root + file.toString()).toPath();
 
-                            if (dir.getFileName().toString().charAt(0) == '.') // skip hidden directories, e.g. .git
-                                return FileVisitResult.SKIP_SUBTREE;
+                    if (Files.isSymbolicLink(file)) {
+                        file = file.toRealPath().getParent();
+                        WatchKey key = file.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
+System.out.println("symlinked: " + file.toString());
+                        keys.put(key, file);
+                    }
+                    else {
+                        file = file.getParent();
 
-                            WatchKey key = dir.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
-                            keys.put(key, dir);
-
-                            return FileVisitResult.CONTINUE;
+                        if (parentRegistered == null || !file.equals(parentRegistered)) {
+                            parentRegistered = file;
+                            WatchKey key = file.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
+                                    StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+                            keys.put(key, file);
+System.out.println(file.toString());
                         }
-            });
+                    }
+                }
+            }
+System.out.println("====================");
 
+//            if (watcher.poll((timeoutSec > 0? timeoutSec : 60), TimeUnit.SECONDS) != null)
+//                result = true;
+//            WatchKey key = watcher.poll((timeoutSec > 0? timeoutSec : 60), TimeUnit.SECONDS);
         infl:
             while (true) {
 
@@ -266,21 +286,94 @@ final public class Resources
                 Path dir = keys.get(key);
 
                 if (dir != null) {
-                    PathMatcher[] matchers = getPathMatchers(include);
+     
+                    for (WatchEvent<?> event: key.pollEvents()) {
+//         
+//                        if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
+//                            event.kind() == StandardWatchEventKinds.ENTRY_DELETE ||
+//                            event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+
+                            if (!dir.resolve((Path)event.context()).toFile().isHidden()) {
+                                result = true;
+                                break infl;
+                            }
+//                        }
+                    }
+
+                    if (!key.reset()) // keep watching this dir
+                        keys.remove(key);
+                }
+                else
+                    break infl;
+            }
+/*
+            java.nio.file.Files.walkFileTree(root, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+                    Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
+                        boolean parentRegistered = false;
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(Path dir, IOException e)
+                            throws IOException {
+                            parentRegistered = false; // depth first...
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attr)
+                            throws IOException {
+                            if (file.getFileName().toString().charAt(0) == '.') // skip hidden dirs, e.g. .git
+                                return FileVisitResult.SKIP_SUBTREE;
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attr)
+                            throws IOException { // adding all directories to inotify watch list
+
+//System.out.println(file.toString());
+                            if (attr.isDirectory())
+                                return FileVisitResult.CONTINUE;
+
+                            Path srcPath = new File(file.toString().substring(rootl)).toPath();
+                            boolean included = pathMatches(srcPath, matchers);
+
+                            if (attr.isSymbolicLink() && included) {
+                                file = file.toRealPath();
+                                WatchKey key = file.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
+//System.out.println("symlinked: " + file.toString());
+                            }
+
+                            if (!parentRegistered && included) {
+                                file = file.getParent();
+                                parentRegistered = true;
+                                WatchKey key = file.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
+                                        StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+//System.out.println(file.toString());
+                            }
+
+                            return FileVisitResult.CONTINUE;
+                        }
+            });
+System.out.println("====================");
+
+            WatchKey key = watcher.poll((timeoutSec > 0? timeoutSec : 60), TimeUnit.SECONDS);
+            */
+/*        infl:
+            while (true) {
+
+                WatchKey key = watcher.poll((timeoutSec > 0? timeoutSec : 60), TimeUnit.SECONDS);
+                Path dir = keys.get(key);
+
+                if (dir != null) {
      
                     for (WatchEvent<?> event: key.pollEvents()) {
          
-                        if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+                        if (event.kind() == ENTRY_MODIFY) {
                             Path path = dir.resolve((Path)event.context());
-                            int rl = root.toString().length();
-                            path = new File(path.toString().substring(rl)).toPath();
+                            path = new File(path.toString().substring(rootl)).toPath();
 
-                            for (PathMatcher m: matchers) {
-                                if (m.matches(path)) {
-                                    result = true;
-                                    break infl;
-                                }
-                            }
+                            if (result = pathMatches(path, matchers))
+                                break infl;
                         }
                     }
 
@@ -290,17 +383,23 @@ final public class Resources
                 else
                     break infl;
             }
+            */
         }
         finally {
-
-//            for (WatchKey key: keys.keySet())
-//                key.cancel();
-
             if (watcher != null)
                 watcher.close();
         }
 
         return result;
+    }
+
+    private static boolean pathMatches(Path path, PathMatcher[] matchers) {
+        for (PathMatcher m: matchers) {
+            if (m.matches(path)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

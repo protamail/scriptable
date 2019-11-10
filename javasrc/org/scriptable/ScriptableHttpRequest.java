@@ -902,8 +902,8 @@ public final class ScriptableHttpRequest extends HttpRequest implements Callable
     public String getUpdateWatcherText() {
         // will connect active tab to websocket backend and reload whenever "reload" command is received
         // from backend or backend instanceId has changed
-        return "var i; (function() {(function f() { if (document.hidden) { setTimeout(f, 1000); return } var w = new WebSocket((location.protocol == 'http:'? 'ws://' : 'wss://') + location.host + '" +
-            getContextPath() + "' + '/updateWatcher'); w.onmessage = function(e) { if (e.data == 'reload') location.reload(); else if (e.data.indexOf('instanceId=') == 0) { if (i && i != e.data) location.reload(); else { i = e.data; console.log(i) } } }; w.onclose = function(e) { setTimeout(f, 1000) } })()})();";
+        return "var i; (function() {function f() { if (document.hidden) { setTimeout(f, 1000); return } var w = new WebSocket((location.protocol == 'http:'? 'ws://' : 'wss://') + location.host + '" +
+            getContextPath() + "' + '/updateWatcher'); w.onmessage = function(e) { if (e.data == 'reload') location.reload(); else if (e.data.indexOf('instanceId=') == 0) { if (i && i != e.data) location.reload(); else { i = e.data; console.log(i) } } }; w.onclose = function(e) { setTimeout(f, 1000) } }; setTimeout(f, 1000);})();";
     }
 
     public String getLogErrorMessage(Throwable e, String errorDetails) {

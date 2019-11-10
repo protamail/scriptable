@@ -1,24 +1,24 @@
 @font-face {
     font-family: 'pt_serif';
-    src: url('static/fonts/ptserif-regular.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptserif-regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 @font-face {
     font-family: 'pt_serif';
-    src: url('static/fonts/ptserif-italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptserif-italic.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 @font-face {
     font-family: 'pt_serif';
-    src: url('static/fonts/ptserif-bold.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptserif-bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 @font-face {
     font-family: 'pt_serif';
-    src: url('static/fonts/ptserif-bolditalic.woff') format('woff');
+    src: url('@{staticdir}/fonts/ptserif-bolditalic.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }

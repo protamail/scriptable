@@ -2,8 +2,8 @@ var conf = _r.config;
 
 // serve batched stylesheets
 // Note: it's better for resources to have well-defined unique URL to improve caching
-exports["bundle.css"] = function(r) {
-    return sendCssBundle(r, "css");
+exports["bundle.css"] = function(r, p) {
+    return sendCssBundle(r, p.id);
 };
 
 function sendCssBundle(r, baseProp) {
@@ -18,8 +18,8 @@ function sendCssBundle(r, baseProp) {
 };
 
 // serve batched javascript files
-exports["bundle.js"] = function(r) {
-    return sendJsBundle(r, "js");
+exports["bundle.js"] = function(r, p) {
+    return sendJsBundle(r, p.id);
 }
 
 function sendJsBundle(r, baseProp) {
@@ -50,12 +50,12 @@ var public_file_matchers = "public-files" in conf?
         Resources.getPathMatchers(conf["public-files"]) : null;
 
 // serve various static files from view/ as long as they match public-files glob spec
-exports["static"] = exports["view"] = function(r) {
+exports["~"] = function(r) {
 
     if (public_file_matchers == null)
         throw "Missing required property: 'public-files'";
 
-    let file = r.originalActionPath;
+    let file = "/" + r.actionArray.join("/"); // must start with slash for match to work
 
     for (var i=0; i<public_file_matchers.length; i++) {
 
@@ -68,6 +68,6 @@ exports["static"] = exports["view"] = function(r) {
 }
 
 exports["favicon.ico"] = function(r, p, t) {
-    return r.sendContent({ file: "static/images/favicon.ico" });
+    return r.sendContent({ file: `${conf.appdir}/view/static/images/favicon.ico` });
 }
 

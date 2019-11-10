@@ -10,6 +10,8 @@ function getXhr(options) {
     options.method = options.method.toLowerCase();
 
     xhrObj.onreadystatechange = function() {
+        // NOTE: unlike with fetch, there's no way to stop XHR from following redirect
+        // it can only be detected after the fact by comparing xhr.responseURL === url
         let readyState = xhrObj.readyState;
 
         if (readyState == 4) { // on complete
@@ -343,8 +345,7 @@ function ajax(url, postParams) {
         if (xhr.isSuccess()) {
 
             if (update != null && statusCode != 204 /* no content */) {
-                let target = typeof (update) == "string"?
-                    document.getElementById(update) : update;
+                let target = typeof (update) == "string"? document.getElementById(update) : update;
 
                 if (target) {
                     target.innerHTML = text;
@@ -385,4 +386,6 @@ function ajax(url, postParams) {
 
     xhr.send(url, data != null? data : encodeUrlData(postParams));
 }
+
+exports.ajax = ajax;
 

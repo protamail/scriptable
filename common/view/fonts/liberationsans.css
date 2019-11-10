@@ -1,27 +1,27 @@
 @font-face {
     font-family: 'liberation_sans';
-    src: url('static/fonts/liberationsans-bold.woff') format('woff');
+    src: url('@{staticdir}/fonts/liberationsans-bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'liberation_sans';
-    src: url('static/fonts/liberationsans-bolditalic.woff') format('woff');
+    src: url('@{staticdir}/fonts/liberationsans-bolditalic.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'liberation_sans';
-    src: url('static/fonts/liberationsans-italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/liberationsans-italic.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'liberation_sans';
-    src: url('static/fonts/liberationsans-regular.woff') format('woff');
+    src: url('@{staticdir}/fonts/liberationsans-regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }

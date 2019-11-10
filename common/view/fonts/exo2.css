@@ -1,27 +1,27 @@
 @font-face {
     font-family: 'exo2_sans';
-    src: url('static/fonts/exo2-bold.woff') format('woff');
+    src: url('@{staticdir}/fonts/exo2-bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'exo2_sans';
-    src: url('static/fonts/exo2-bolditalic.woff') format('woff');
+    src: url('@{staticdir}/fonts/exo2-bolditalic.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'exo2_sans';
-    src: url('static/fonts/exo2-italic.woff') format('woff');
+    src: url('@{staticdir}/fonts/exo2-italic.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'exo2_sans';
-    src: url('static/fonts/exo2-regular.woff') format('woff');
+    src: url('@{staticdir}/fonts/exo2-regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }

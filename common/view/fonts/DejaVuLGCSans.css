@@ -1,34 +1,34 @@
 @font-face {
     font-family: 'dejavu_sans';
-    src: url('static/fonts/DejaVuLGCSans.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSans.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'dejavu_sans';
-    src: url('static/fonts/DejaVuLGCSans-ExtraLight.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSans-ExtraLight.woff') format('woff');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'dejavu_sans';
-    src: url('static/fonts/DejaVuLGCSans-Oblique.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSans-Oblique.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'dejavu_sans';
-    src: url('static/fonts/DejaVuLGCSans-Bold.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSans-Bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'dejavu_sans';
-    src: url('static/fonts/DejaVuLGCSans-BoldOblique.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSans-BoldOblique.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }

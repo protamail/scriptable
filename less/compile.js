@@ -1,14 +1,14 @@
 
 exports.compileCssFiles = function(files, minify, output) {
-    var result = '', imports = '';
+    var result = '',
+        imports = "@staticdir: '" + ("staticdir" in _r.config? _r.config.staticdir : "appdir" in _r.config?
+                                     "~" + Files.normalizePath("/" + _r.config.appdir + "/view/static") :
+                                    "static/") + "';";
 
     for (var i=0, l=files.length; i<l; i++) {
-        if (Strings.endsWith(files[i], '.less'))
-            imports += '@import (less) "' + files[i] + '";';
-        else {
-            result += Files.getFileAsString(files[i]);
-            result += "\n";
-        }
+        // make sure less and css follow same file ordering conventions,
+        // that is depth first alpha order
+        imports += '@import (less) "' + files[i] + '";';
     }
 
     if (imports.length) {
@@ -16,7 +16,7 @@ exports.compileCssFiles = function(files, minify, output) {
                 try {
                     if (err)
                         throw err;
-                    result = tree.toCSS({ compress: minify }) + result; // append .css files after .less
+                    result = tree.toCSS({ compress: minify });
                 }
                 catch (e) {
                     throw see(e);

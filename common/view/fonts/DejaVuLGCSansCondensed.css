@@ -1,27 +1,27 @@
 @font-face {
     font-family: 'dejavu_sans_condensed';
-    src: url('static/fonts/DejaVuLGCSansCondensed.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSansCondensed.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'dejavu_sans_condensed';
-    src: url('static/fonts/DejaVuLGCSansCondensed-Oblique.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSansCondensed-Oblique.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 
 @font-face {
     font-family: 'dejavu_sans_condensed';
-    src: url('static/fonts/DejaVuLGCSansCondensed-Bold.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSansCondensed-Bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'dejavu_sans_condensed';
-    src: url('static/fonts/DejaVuLGCSansCondensed-BoldOblique.woff') format('woff');
+    src: url('@{staticdir}/fonts/DejaVuLGCSansCondensed-BoldOblique.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }
