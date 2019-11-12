@@ -33,7 +33,6 @@
             <fileset dir="${basedir}/lib" includes="*.jar" />
         </copy>
         <copy todir="${classesdir}">
-            <fileset dir="${srcdir}" includes="*.properties" />
             <fileset dir="${srcdir}/scriptable" includes="*.properties" />
         </copy>
         <copy todir="${webinfdir}" failonerror="false" quiet="true">
@@ -86,16 +85,16 @@
 
     <target name="release-test" depends="clean-build-release, set-test-mode">
         <fail unless="testing-war-path" message="Property 'testing-war-path' missing in build.properties. It should specify testing environment installation pathname of the app war file (possibly remote, using 'scp' notation)." />
-        <antcall target="create-war" />
-        <antcall target="update-war"><param name="war.path" value="${testing-war-path}" /></antcall>
+        <antcall target="-create-war" />
+        <antcall target="-update-war"><param name="war.path" value="${testing-war-path}" /></antcall>
         <!-- reset dev-mode if needed --><antcall target="dev-reload" />
     </target>
 
-    <target name="build-war" depends="clean-build-release, create-war" />
+    <target name="build-war" depends="clean-build-release, -create-war" />
 
-    <target name="release-prod" depends="clean-build-release, set-prod-mode, create-war, tag-release">
+    <target name="release-prod" depends="clean-build-release, set-prod-mode, -create-war, tag-release">
         <fail unless="production-war-path" message="Property 'production-war-path' missing in build.properties. It should specify testing environment installation pathname of the app war file (possibly remote, using 'scp' notation)." />
-        <antcall target="update-war"><param name="war.path" value="${production-war-path}" /></antcall>
+        <antcall target="-update-war"><param name="war.path" value="${production-war-path}" /></antcall>
         <!-- reset dev-mode if needed --><antcall target="dev-reload" />
     </target>
 
@@ -148,7 +147,7 @@
         </exec>
     </target>
 
-    <target name="update-war" if="war.path">
+    <target name="-update-war" if="war.path">
         <echo message="Copying ${warfile} to ${war.path}" />
         <exec failonerror="true" executable="scp">
             <arg value="${warfile}" />
@@ -207,10 +206,10 @@
             documentRoot="${srcdir}" basePropertyName="" releasing="${releasing}" />
     </target>
 
-    <target name="create-war">
-        <uptodate targetfile="${warfile}" property="jar.uptodate">
+    <target name="-create-war">
+        <!--uptodate targetfile="${warfile}" property="jar.uptodate">
             <srcfiles dir="${srcdir}" includes="${jar.includes}" />
-        </uptodate>
+        </uptodate-->
         <jar destfile="${warfile}" basedir="${srcdir}"
             includes="${war-assets} WEB-INF/**"
             excludes="WEB-INF/transpiled/**" />

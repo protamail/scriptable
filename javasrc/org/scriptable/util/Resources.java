@@ -2,6 +2,7 @@ package org.scriptable.util;
 
 import org.scriptable.HttpRequest;
 import org.scriptable.ScriptableMap;
+import org.scriptable.ScriptableRequest;
 import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.EnumSet;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -120,47 +122,92 @@ final public class Resources
      * @return List of file paths specified relative to source root, e.g.
      *          view/**.js view/**.htm
      */
-    public static String[] listSourceFiles(ScriptableMap props, String basePropertyName)
-        throws IOException {
-        return listSourceFiles(props.get(basePropertyName + ".include", (String)null),
+    public static String[] listSourceFiles(ArrayList<Path> sourceDirs,
+            ScriptableMap props, String basePropertyName) throws IOException {
+        return listSourceFiles(sourceDirs, props.get(basePropertyName + ".include", (String)null),
                 props.get(basePropertyName + ".exclude", (String)null));
     }
 
-    public static String[] listSourceFiles(String include)
+    public static ArrayList<Path> listSourceDirs(ScriptableMap props, String basePropertyName)
         throws IOException {
-        return listSourceFiles(include, null);
+        return listSourceDirs(props.get(basePropertyName + ".include", (String)null),
+                props.get(basePropertyName + ".exclude", (String)null), false);
     }
 
-    public static String[] listSourceFiles(String include, String exclude)
+    // depth-first list of directories with matching source files,
+    // If followSymlinks is true, will return parent directories of symlinked files
+    private static ArrayList<Path> listSourceDirs(String include, String exclude, boolean followSymlinks)
         throws IOException {
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<Path> result = new ArrayList<Path>();
+        HashSet<Path> dirs = new HashSet<Path>();
+        Path rootp = getRootPath();
+        String root = rootp.toString();
+        int rootl = root.length();
 
-        PathMatcher[] matchers = getPathMatchers(include);
-        PathMatcher[] dismatchers = getPathMatchers(exclude);
+        // NOTE: Files.walkFileTree is not suitable since it's not strictly depth-first
+        // meaning it doesn't guarantee visiting directories before any of the sibling files
+        ArrayList<Path> files = new ArrayList<Path>();
+        listSourceFilesRecursively(files, rootp.toFile());
+        ArrayList<String> sourceFiles =
+            filterSourceFiles(files, getPathMatchers(include), getPathMatchers(exclude));
 
-        ArrayList<Path> paths = new ArrayList<Path>();
-        listFilesRecursively(paths, getRootPath().toFile());
+        for (String mf: sourceFiles) {
+            Path file = new File(root + mf.toString()).toPath();
 
-        for (PathMatcher m: matchers) {
+            if (followSymlinks && Files.isSymbolicLink(file))
+                file = file.toRealPath();
+            
+            file = file.getParent();
 
-            nextPath:
+            if (!dirs.contains(file)) {
+                dirs.add(file);
+                result.add(file);
+            }
+        }
 
-            for (Path path: paths) {
+        return result;
+    }
 
-                if (m.matches(path)) {
+    // NOTE: sourceDirs should be the result of listSourceDirs with followSymlinks set to false
+    public static String[] listSourceFiles(ArrayList<Path> sourceDirs, String include, String exclude)
+        throws IOException {
+        ArrayList<Path> files = new ArrayList<Path>();
+        int rootl = getRootPath().toString().length();
 
-                    for (PathMatcher dm: dismatchers) {
+        for (Path dir: sourceDirs) {
+            List<File> list = Arrays.asList(dir.toFile().listFiles());
+            Collections.sort(list); // sort alphabetically to get repeatable order
 
-                        if (dm.matches(path))
-                            continue nextPath;
-                    }
-
-                    result.add(path.toString()); // paths already don't include hidden/emacs tmp
+            for (File f: list) {
+                if (!f.isDirectory() && !f.isHidden()) {
+                    // Note: don't use getCanonicalPath here since it'll confuse matchers in case of symlink
+                    files.add(new File(f.toString().substring(rootl)).toPath());
                 }
             }
         }
 
-        return result.toArray(new String[result.size()]);
+        ArrayList<String> sourceFiles =
+            filterSourceFiles(files, getPathMatchers(include), getPathMatchers(exclude));
+        return sourceFiles.toArray(new String[sourceFiles.size()]);
+    }
+
+    private static ArrayList<Path> listSourceFilesRecursively(ArrayList<Path> result, File dir)
+        throws IOException {
+        List<File> list = Arrays.asList(dir.listFiles());
+        int rl = getRootPath().toString().length();
+        Collections.sort(list); // sort alphabetically to get repeatable order
+        // list depth first, so sub-directory content is listed before the files
+        for (File f: list) {
+            if (f.isDirectory() && !f.isHidden()) // skip hidden directories, e.g. .git
+                listSourceFilesRecursively(result, f);
+        }
+        for (File f: list) {
+            if (!f.isDirectory() && !f.isHidden()) {
+                // Note: don't use getCanonicalPath here since it'll confuse matchers in case of symlink
+                result.add(new File(f.toString().substring(rl)).toPath());
+            }
+        }
+        return result;
     }
 
     private static FileSystem fs = FileSystems.getDefault();
@@ -193,25 +240,6 @@ final public class Resources
         return m.matches(Paths.get(path));
     }
 
-    private static ArrayList<Path> listFilesRecursively(ArrayList<Path> result, File dir)
-        throws IOException {
-        List<File> list = Arrays.asList(dir.listFiles());
-        int rl = getRootPath().toString().length();
-        Collections.sort(list); // sort alphabetically to get repeatable order
-        // list depth first, so sub-directory content is listed before the files
-        for (File f: list) {
-            if (f.isDirectory() && !f.isHidden()) // skip hidden directories, e.g. .git
-                listFilesRecursively(result, f);
-        }
-        for (File f: list) {
-            if (!f.isDirectory() && !f.isHidden()) {
-                // Note: don't use getCanonicalPath here since it'll confuse matchers in case of symlink
-                result.add(new File(f.toString().substring(rl)).toPath());
-            }
-        }
-        return result;
-    }
-
     public static String[] splitAndTrim(String input, char delim) {
         ArrayList<String> array = new ArrayList<String>();
         int i;
@@ -234,51 +262,21 @@ final public class Resources
 
     public static boolean waitForUpdates(String include, long timeoutSec)
         throws IOException, InterruptedException {
-
         final WatchService watcher = FileSystems.getDefault().newWatchService();
         HashMap<WatchKey, Path> keys = new HashMap<WatchKey, Path>();
         boolean result = false;
-        String root = getRootPath().toString();
-        int rootl = root.length();
-        PathMatcher[] matchers = getPathMatchers(include);
+        Path rootp = getRootPath();
+        int rootl = rootp.toString().length();
 
         try {
+            ArrayList<Path> sourceDirs = listSourceDirs(include, null, true);
 
-System.out.println("====================");
-            // NOTE: Files.walkFileTree is not suitable since it's not strictly depth-first
-            // meaning it doesn't guarantee visiting directories before any of the sibling files
-            ArrayList<Path> files = new ArrayList<Path>();
-            listFilesRecursively(files, getRootPath().toFile());
-            Path parentRegistered = null;
-
-            for (Path file: files) {
-                if (pathMatches(file, matchers)) {
-                    file = new File(root + file.toString()).toPath();
-
-                    if (Files.isSymbolicLink(file)) {
-                        file = file.toRealPath().getParent();
-                        WatchKey key = file.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
-System.out.println("symlinked: " + file.toString());
-                        keys.put(key, file);
-                    }
-                    else {
-                        file = file.getParent();
-
-                        if (parentRegistered == null || !file.equals(parentRegistered)) {
-                            parentRegistered = file;
-                            WatchKey key = file.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
-                                    StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-                            keys.put(key, file);
-System.out.println(file.toString());
-                        }
-                    }
-                }
+            for (Path dir: sourceDirs) {
+                WatchKey key = dir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
+                        StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+                keys.put(key, dir);
             }
-System.out.println("====================");
 
-//            if (watcher.poll((timeoutSec > 0? timeoutSec : 60), TimeUnit.SECONDS) != null)
-//                result = true;
-//            WatchKey key = watcher.poll((timeoutSec > 0? timeoutSec : 60), TimeUnit.SECONDS);
         infl:
             while (true) {
 
@@ -288,92 +286,14 @@ System.out.println("====================");
                 if (dir != null) {
      
                     for (WatchEvent<?> event: key.pollEvents()) {
-//         
-//                        if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
-//                            event.kind() == StandardWatchEventKinds.ENTRY_DELETE ||
-//                            event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+                        Path path = dir.resolve((Path)event.context());
 
-                            if (!dir.resolve((Path)event.context()).toFile().isHidden()) {
-                                result = true;
-                                break infl;
-                            }
-//                        }
-                    }
+                        if (!path.toFile().isHidden()) {
+                            if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE)
+                                ScriptableRequest.triggerGlobalRefresh(); // erase deleted
 
-                    if (!key.reset()) // keep watching this dir
-                        keys.remove(key);
-                }
-                else
-                    break infl;
-            }
-/*
-            java.nio.file.Files.walkFileTree(root, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-                    Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
-                        boolean parentRegistered = false;
-
-                        @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException e)
-                            throws IOException {
-                            parentRegistered = false; // depth first...
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult preVisitDirectory(Path file, BasicFileAttributes attr)
-                            throws IOException {
-                            if (file.getFileName().toString().charAt(0) == '.') // skip hidden dirs, e.g. .git
-                                return FileVisitResult.SKIP_SUBTREE;
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attr)
-                            throws IOException { // adding all directories to inotify watch list
-
-//System.out.println(file.toString());
-                            if (attr.isDirectory())
-                                return FileVisitResult.CONTINUE;
-
-                            Path srcPath = new File(file.toString().substring(rootl)).toPath();
-                            boolean included = pathMatches(srcPath, matchers);
-
-                            if (attr.isSymbolicLink() && included) {
-                                file = file.toRealPath();
-                                WatchKey key = file.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
-//System.out.println("symlinked: " + file.toString());
-                            }
-
-                            if (!parentRegistered && included) {
-                                file = file.getParent();
-                                parentRegistered = true;
-                                WatchKey key = file.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
-                                        StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-//System.out.println(file.toString());
-                            }
-
-                            return FileVisitResult.CONTINUE;
-                        }
-            });
-System.out.println("====================");
-
-            WatchKey key = watcher.poll((timeoutSec > 0? timeoutSec : 60), TimeUnit.SECONDS);
-            */
-/*        infl:
-            while (true) {
-
-                WatchKey key = watcher.poll((timeoutSec > 0? timeoutSec : 60), TimeUnit.SECONDS);
-                Path dir = keys.get(key);
-
-                if (dir != null) {
-     
-                    for (WatchEvent<?> event: key.pollEvents()) {
-         
-                        if (event.kind() == ENTRY_MODIFY) {
-                            Path path = dir.resolve((Path)event.context());
-                            path = new File(path.toString().substring(rootl)).toPath();
-
-                            if (result = pathMatches(path, matchers))
-                                break infl;
+                            result = true;
+                            break infl;
                         }
                     }
 
@@ -383,7 +303,6 @@ System.out.println("====================");
                 else
                     break infl;
             }
-            */
         }
         finally {
             if (watcher != null)
@@ -393,13 +312,28 @@ System.out.println("====================");
         return result;
     }
 
-    private static boolean pathMatches(Path path, PathMatcher[] matchers) {
+    private static ArrayList<String> filterSourceFiles(ArrayList<Path> files,
+            PathMatcher[] matchers, PathMatcher[] dismatchers) {
+        ArrayList<String> result = new ArrayList<String>();
+
         for (PathMatcher m: matchers) {
-            if (m.matches(path)) {
-                return true;
+
+            nextPath:
+
+            for (Path file: files) { // we include all files matching first glob set before second, etc.
+                if (m.matches(file)) {
+
+                    for (PathMatcher dm: dismatchers) {
+                        if (dm.matches(file))
+                            continue nextPath;
+                    }
+
+                    result.add(file.toString()); // files don't include hidden/emacs tmp already
+                }
             }
         }
-        return false;
+
+        return result;
     }
 }
 

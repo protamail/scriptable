@@ -58,6 +58,12 @@ public final class ScriptableMap extends AbstractMap<String, Object> implements 
         dynamicValues = new ArrayList<>();
     }
 
+    @Override
+    public void clear() {
+        for (String k: keySet())
+            delete(k);
+    }
+
     public ScriptableMap(String objectName) {
         this();
         this.objectName = objectName;

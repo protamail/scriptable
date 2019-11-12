@@ -7,12 +7,9 @@ exports["bundle.css"] = function(r, p) {
 };
 
 function sendCssBundle(r, baseProp) {
-
-    if (!__developmentMode__)
-        return r.sendContent({ file: conf[baseProp + ".output"] });
-
-    // load less lib only in dev
-    require("/scriptable/less/index.js").runLessCompileTask(baseProp);
+    if (__developmentMode__)
+        // load less lib only in dev
+        require("/scriptable/less/index.js").runLessCompileTask(baseProp);
 
     return r.sendContent({ file: conf[baseProp + ".output"] });
 };
@@ -23,26 +20,10 @@ exports["bundle.js"] = function(r, p) {
 }
 
 function sendJsBundle(r, baseProp) {
-
     if (__developmentMode__)
         r.runClientJsTranspileTask(baseProp);
 
     return r.sendContent({ file: conf[baseProp + ".output"] });
-
-    /*
-    var files = r.listSourceFilesCached(baseProp);
-    var lastModified = Files.getLastModified(files);
-
-    // callback is used to skip retrieving the files in case not-modified is returned
-    var getData = function() {
-        r.clearSourceFileListCache(baseProp);
-        files = r.listSourceFilesCached(baseProp);
-
-        return r.wrapAnon(baseProp, Files.getFilesAsString(files));
-    }
-
-    return r.sendContent({ type: "js", contentCallback: getData, lastModified: lastModified });
-    */
 }
 
 // protects from sending unintended resources to client

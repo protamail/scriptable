@@ -19,6 +19,7 @@ import java.io.StringWriter;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.nio.ByteBuffer;
+import java.net.URL;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -36,8 +37,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.sql.SQLException;
 
-public abstract class HttpRequest
-{
+public abstract class HttpRequest {
     public final ServletContext servlet;
 
     private HttpServletRequest req;
@@ -48,7 +48,7 @@ public abstract class HttpRequest
     String queryString = null;
     String searchString = null;
     String requestUrl = null;
-    static String documentRoot = Paths.get(".").toAbsolutePath().normalize() + "/";
+    static String documentRoot = null;//Paths.get(".").toAbsolutePath().normalize() + "/";
     static String contextPath = null;
     static String cookiePath = null;
     static Boolean staticsInitialized = false;
@@ -66,6 +66,36 @@ public abstract class HttpRequest
     static Logger eventLogger = Logger.getLogger(HttpRequest.class.getName() + ".event");
 
     static public final long instanceId = Math.round(Math.floor(Math.random()*100001));
+
+    static ScriptableMap config = null;
+    static boolean developmentMode = false;
+    static boolean testEnv = false;
+
+    static {
+        try {
+            ScriptableMap c = new ScriptableMap("Settings from scriptable.properties");
+            Enumeration<URL> pf = ScriptableRequest.class.getClassLoader().getResources("mode.properties");
+
+            while (pf.hasMoreElements())
+                Files.loadPropertiesFromStream(c, pf.nextElement().openStream());
+
+            // need these initialized before any other code runs
+            developmentMode = c.containsKey("mode") && c.get("mode").equals("dev");
+            testEnv = c.containsKey("mode") && c.get("mode").equals("test");
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public final static String CONFIG_FILE_NAME = "/scriptable.properties";
+
+    static ScriptableMap loadScriptableProperties() throws IOException {
+        // this is only called before global refresh, so no need to keep config references
+        ScriptableMap c = new ScriptableMap("Settings from scriptable.properties");
+        Files.loadProperties(c, Files.getFile(CONFIG_FILE_NAME));
+        return c;
+    }
 
     public static long getServerStartMillis() {
         return serverStartMillis;
@@ -211,8 +241,27 @@ public abstract class HttpRequest
         return documentRoot;
     }
 
-    public static final void setDocumentRoot(String v) {
+    public static final synchronized void setDocumentRoot(String v) throws IOException {
         documentRoot = Paths.get(v).toAbsolutePath().normalize() + "/";
+
+        if (config == null) // load /scriptable.properties now that document root is known
+            config = loadScriptableProperties();
+    }
+
+    public static final boolean isProductionMode() {
+        return !developmentMode;
+    }
+
+    public static final boolean isDevelopmentMode() {
+        return developmentMode;
+    }
+
+    public static final boolean isTestEnvironment() {
+        return testEnv;
+    }
+
+    public static ScriptableMap getConfig() {
+        return config;
     }
 
     String method = null;

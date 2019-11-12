@@ -98,31 +98,18 @@ exports.wrapAnon = function (baseName, source) {
 exports.runClientJsTranspileTask = sync(function(baseName, opt) {
     opt = opt || {};
 
-    function listUpdatedFiles(getLastModified) {
-        var files = exports.listSourceFilesCached(baseName);
-        var result = [];
-
-        for (var i in files) {
-
-//            if (files[i].startsWith('/'))
-//                files[i] = files[i].substring(1);
-
-            if (!getLastModified)
-                result.push(jscomp.SourceFile.fromFile(Files.getFile(files[i])));
-        }
-
-        return getLastModified? exports.getMostRecentModified(files) : result;
-   }
-
-    var dataLastModified = listUpdatedFiles(true);
+    var files = exports.listSourceFilesCached(baseName);
+    var dataLastModified = exports.getMostRecentModified(files);
     var output = conf[baseName + '.output'];
     var outFile = Files.getFile(output);
 
     // at least create output dir/file, so tomcat has access to it in dev
     if (!dataLastModified || dataLastModified > Files.getLastModified(outFile)) {
         Files.mkdirs(outFile, true); // writable by all
-        exports.clearSourceFileListCache(baseName);
-        var updatedFiles = listUpdatedFiles();  // will get all files
+        var updatedFiles = [];
+
+        for (var i in files)
+            updatedFiles.push(jscomp.SourceFile.fromFile(Files.getFile(files[i])));
 
         logEvent("Transpiling " + updatedFiles.length + " " + baseName + " file(s) to " + output);
 
@@ -158,9 +145,8 @@ exports.runClientJsTranspileTask = sync(function(baseName, opt) {
 exports.runSoyTranspileTask = sync(function(baseName, opt) {
     opt = opt || {};
 
-    function listUpdatedFiles() {
+    function listUpdatedFiles(files) {
         var updatedFiles = [];
-        var files = exports.listSourceFilesCached(baseName);
         var pathMatcher = opt.extMatch? Resources.getPathMatcher(opt.extMatch) : null;
 
         for (var i=0,l=files.length; i<l; i++) { // find updated files
@@ -175,16 +161,13 @@ exports.runSoyTranspileTask = sync(function(baseName, opt) {
         return updatedFiles;
     }
 
-    var updatedFiles = listUpdatedFiles();
+    var files = exports.listSourceFilesCached(baseName);
+    var updatedFiles = listUpdatedFiles(files);
+
+    if (exports.needRefreshIndexFile(baseName) || updatedFiles.length)
+        exports.genIndexFile(baseName, files);
 
     if (updatedFiles.length) {
-        // make sure new soy/md/etc modules get picked up
-        exports.clearSourceFileListCache(baseName);
-
-        exports.genIndexFile(baseName);
-
-        updatedFiles = listUpdatedFiles();
-
         logEvent("Transpiling " + updatedFiles.length + " " + baseName +
                 (opt.extMatch? " " + opt.extMatch : "") + " file(s) to " + TRANSPILE_DEST);
 
@@ -225,7 +208,7 @@ exports.runSoyTranspileTask = sync(function(baseName, opt) {
     return updatedFiles.length;
 });
 
-var TRANSPILE_DEST = "/WEB-INF/transpiled/";
+var TRANSPILE_DEST = _r.TRANSPILE_DIR + "/";
 
 /**
  * This function is used to convert ES6 Javascript to ES5 syntax
@@ -233,8 +216,7 @@ var TRANSPILE_DEST = "/WEB-INF/transpiled/";
 exports.runServerJsTranspileTask = sync(function(baseName, opt) {
     opt = opt || {};
 
-    function listUpdatedFiles() {
-        var files = exports.listSourceFilesCached(baseName);
+    function listUpdatedFiles(files) {
         var updatedFiles = [];
         var pathMatcher = opt.extMatch? Resources.getPathMatcher(opt.extMatch) : null;
 
@@ -251,17 +233,14 @@ exports.runServerJsTranspileTask = sync(function(baseName, opt) {
         return updatedFiles;
     }
 
-    var updatedFiles = listUpdatedFiles();
+    var files = exports.listSourceFilesCached(baseName);
+    var updatedFiles = listUpdatedFiles(files);
     var args = [];
 
+    if (exports.needRefreshIndexFile(baseName) || updatedFiles.length)
+        exports.genIndexFile(baseName, files);
+
     if (updatedFiles.length) {
-        // make sure any new files get picked up
-        exports.clearSourceFileListCache(baseName);
-
-        exports.genIndexFile(baseName);
-
-        updatedFiles = listUpdatedFiles();
-
         logEvent("Transpiling " + (opt.releasing? "(for release) " : "") + updatedFiles.length + " " +
                 baseName + (opt.extMatch? " " + opt.extMatch : "") + " file(s) to " + TRANSPILE_DEST);
 
@@ -346,12 +325,19 @@ exports.runGenericTranspileTask = sync(function(baseName, opt) {
     return updateCount;
 });
 
-exports.genIndexFile = function (baseName) {
+var indexRegenSinceLoad = {};
+
+exports.needRefreshIndexFile = function (baseName) {
+    // used to force index file regen after global refresh
+    return !indexRegenSinceLoad[baseName];
+}
+
+exports.genIndexFile = function (baseName, files) {
     var p = baseName + '.genIndexFile';
     var indexFile = p in conf? conf[p] : null;
+    indexRegenSinceLoad[baseName] = 1;
 
     if (indexFile != null) {
-        var files = exports.listSourceFilesCached(baseName);
         var genSource = "";
 
         for (var i=0; i<files.length; i++)
@@ -370,7 +356,10 @@ exports.genIndexFile = function (baseName) {
 exports.runServerJsCompileTask = sync(function(baseName, opt) {
     opt = opt || {};
 
-    var files = Resources.listSourceFiles(TRANSPILE_DEST + "**.js");
+    if (!("__transpile_js__" in conf))
+        conf["__transpile_js__.include"] = TRANSPILE_DEST + "**.js";
+
+    var files = exports.listSourceFilesCached("__transpile_js__");
     var env = new org.mozilla.javascript.CompilerEnvirons();
     env.initFromContext(org.mozilla.javascript.Context.getCurrentContext());
     env.generateDebugInfo = false; // for script error stack trace (also exposes dev paths), not needed in dev

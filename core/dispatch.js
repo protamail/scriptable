@@ -119,23 +119,22 @@ var rootDispatchObject = null; // postpone loading the rest of the app
 
 _r.startFunc = function(r) {
 
-    if (rootDispatchObject == null) {
-        rootDispatchObject = require(__rootDispatchFile__);
-    }
-
     if (__developmentMode__) {
         var millis = Date.now();
 
         if ((millis - lastReloadTime) > 2000) { // don't try to reload more often than every 2 sec
 
-            if ("__beforeJsReload__" in conf && typeof conf.__beforeJsReload__ == "function")
-                conf.__beforeJsReload__();
+            if ("before-js-reload-targets" in conf) {
+                // this way we don't rely on user defined __beforeJsReload__ handler,
+                // and therefore, don't need to load rootDispatchObject before doing this
+                _r.runGenericTranspileTask(conf["before-js-reload-targets"]);
+            }
+            else if (__developmentMode__) {
+                logError("Missing essential development environment configuration: before-js-reload-targets needs to be defined in scriptable.properties so that updated server scripts can be recompiled (according to the specified targets) and reloaded.");
+            }
 
             _r.reloadUpdatedModules();
             lastReloadTime = millis;
-
-            if ("__afterJsReload__" in conf && typeof conf.__afterJsReload__ == "function")
-                conf.__afterJsReload__();
         }
     }
     r.setRequestTimerCheckpoint("dispatch");
@@ -147,6 +146,10 @@ _r.startFunc = function(r) {
     r.actionScopeStack = actionScopeStack;
     r.dispatchOn = function (actionObj) {
         return _dispatch(r, actionObj, templateParam, actionScopeStack);
+    }
+
+    if (rootDispatchObject == null) { // make __beforeJsReload__ handler available
+        rootDispatchObject = require(__rootDispatchFile__);
     }
 
     var result = _dispatch(r, rootDispatchObject, templateParam, actionScopeStack);

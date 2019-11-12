@@ -8,39 +8,26 @@ package org.scriptable;
 
 import org.scriptable.util.Files;
 import org.scriptable.util.Json;
-import org.scriptable.util.Jdbc;
-import org.scriptable.util.Resources;
-import org.scriptable.ScriptableFilter;
 import org.scriptable.template.TemplateUtil;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Function;
-import org.mozilla.javascript.WrapFactory;
 import org.mozilla.javascript.NativeJavaObject;
 import org.mozilla.javascript.NativeJavaClass;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.ScriptStackElement;
 import org.mozilla.javascript.Undefined;
-import java.io.FileReader;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.io.PrintWriter;
 import java.io.InputStreamReader;
 import java.io.ByteArrayOutputStream;
-import java.net.URL;
 import java.util.Locale;
-import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Callable;
@@ -63,24 +50,15 @@ import java.util.concurrent.ExecutionException;
 public final class ScriptableRequest extends HttpRequest implements Callable {
     Thread requestThread = null;
     Throwable asyncException = null;
-    private static ScriptableMap config;
-    static final boolean developmentMode;
-    static final boolean testEnv;
-
-    static {
-        config = loadScriptableProperties();
-        developmentMode = config.containsKey("mode") && config.get("mode").equals("dev");
-        testEnv = config.containsKey("mode") && config.get("mode").equals("test");
-    }
 
     // The names of bootstrap and configuration files
     public final static String INIT_JS = "scriptable/core/_init.js";
-    public final static String CONFIG_FILE_NAME = "/scriptable.properties";
     public final static String CONTEXT_PATH = "__contextPath__";
     public final static String CONTEXT_MODULE = "__contextModule__";
     public final static String CONTEXT_EXPORTS_OBJ = "__contextExportsObj__";
 
     public final static String CONF_TARGETS_PROP = "targets";
+    public final static String TRANSPILE_DIR = "/WEB-INF/transpiled";
 
     public static Function startFunc = null;
     static Function requireFunc = null;
@@ -90,45 +68,8 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
     public Scriptable actionScopeStack = null;
     public boolean skipErrorLogging = false; // set to true to skip error logging in this request
 
-    private static ScriptableMap loadScriptableProperties() {
-        ScriptableMap c = new ScriptableMap("Settings from scriptable.properties");
-
-        try {
-            Enumeration<URL> pf = ScriptableRequest.class.getClassLoader()
-                .getResources("scriptable.properties");
-
-            while (pf.hasMoreElements())
-                Files.loadPropertiesFromStream(c, pf.nextElement().openStream());
-
-            pf = ScriptableRequest.class.getClassLoader().getResources("mode.properties");
-
-            while (pf.hasMoreElements())
-                Files.loadPropertiesFromStream(c, pf.nextElement().openStream());
-        }
-        catch (IOException e) {
-            logError("loadScriptableProperties: " + e.getMessage());
-        }
-
-        return c;
-    }
-
-    public static final boolean isProductionMode() {
-        return !developmentMode;
-    }
-
-    public static final boolean isDevelopmentMode() {
-        return developmentMode;
-    }
-
-    public static final boolean isTestEnvironment() {
-        return testEnv;
-    }
-
-    public static ScriptableMap getConfig() {
-        return config;
-    }
-
-    private final static ThreadLocal<ScriptableRequest> requestInstance = new ThreadLocal<ScriptableRequest>();
+    private final static ThreadLocal<ScriptableRequest> requestInstance =
+        new ThreadLocal<ScriptableRequest>();
     private final static ThreadLocal<Locale> locale = new ThreadLocal<Locale>();
 
     /**
@@ -143,6 +84,7 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
     static PrimitiveWrapFactory myWrapFactory = new PrimitiveWrapFactory();
 */
     static Scriptable globalScope = null;
+    static boolean doGlobalRefresh = false;
     // make older than non-existent file
     static long initLastModified = -1, configPropertiesLastModified = -1;
 
@@ -179,6 +121,10 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
 //        globalScope.unseal();
     }
 
+    public static void triggerGlobalRefresh() {
+        doGlobalRefresh = true;
+    }
+
     // emptyScope instanceof Object must be true
     static Scriptable emptyScope = null;
 
@@ -213,7 +159,8 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
     public static Object evaluateFile(String file, String contextPath, Scriptable exports)
         throws IOException {
 
-        synchronized (globalScope) {
+        //synchronized (globalScope) {
+        synchronized (ScriptableRequest.class) {
             Object savedRequirePath = globalScope.get(CONTEXT_PATH, globalScope);
             Object savedRequireModule = globalScope.get(CONTEXT_MODULE, globalScope);
             Object savedExportsObj = globalScope.get(CONTEXT_EXPORTS_OBJ, globalScope);
@@ -550,18 +497,30 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
         try {
 
             if (isDevelopmentMode() && (
+                        doGlobalRefresh ||
                         initLastModified < Files.getLastModified(INIT_JS) ||
                         // properties affect group import defs and scriptable.js module
                         configPropertiesLastModified < Files.getLastModified(CONFIG_FILE_NAME))) {
 
-                globalScope = null;
-                emptyScope = null;
-                startFunc = null;
-                r = null;
-		requireFunc = null;
-                initLastModified = Files.getLastModified(INIT_JS);
-                configPropertiesLastModified = Files.getLastModified(CONFIG_FILE_NAME);
-                config = loadScriptableProperties();
+                synchronized(ScriptableRequest.class) {
+                    long _initLastModified = Files.getLastModified(INIT_JS);
+                    long _configPropertiesLastModified = Files.getLastModified(CONFIG_FILE_NAME);
+
+                    if (doGlobalRefresh ||
+                        initLastModified < _initLastModified ||
+                        configPropertiesLastModified < _configPropertiesLastModified) {
+
+                        doGlobalRefresh = false;
+                        globalScope = null;
+                        emptyScope = null;
+                        startFunc = null;
+                        r = null;
+                        requireFunc = null;
+                        initLastModified = _initLastModified;
+                        configPropertiesLastModified = _configPropertiesLastModified;
+                        config = loadScriptableProperties();
+                    }
+                }
             }
 
             result = runInJsEnv(this, this).toString();
@@ -742,7 +701,7 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
         }
 
         if (startFunc == null)
-            throw new RuntimeException("startFunc was not defined");
+            return "startFunc was not defined"; // this is likely due to INIT_JS being reloaded, no big deal
 
         result = callJsFunction(startFunc, getNativeCurrentRequest()).toString();
 
@@ -906,13 +865,16 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
     public String getUpdateWatcherText() {
         // will connect active tab to websocket backend and reload whenever "reload" command is received
         // from backend or backend instanceId has changed
-        return "var i; (function() {function f() { if (document.hidden) { setTimeout(f, 1000); return } var w = new WebSocket((location.protocol == 'http:'? 'ws://' : 'wss://') + location.host + '" +
-            getContextPath() + "' + '/updateWatcher'); w.onmessage = function(e) { if (e.data == 'reload') location.reload(); else if (e.data.indexOf('instanceId=') == 0) { if (i && i != e.data) location.reload(); else { i = e.data; console.log(i) } } }; w.onclose = function(e) { setTimeout(f, 1000) } }; setTimeout(f, 1000);})();";
+        return "var i; (function() {(function f() { if (document.hidden) { setTimeout(f, 1000); return } var w = new WebSocket((location.protocol == 'http:'? 'ws://' : 'wss://') + location.host + '" +
+            (getContextPath() + "/updateWatcher") +
+            "'); w.onmessage = function(e) { if (e.data == 'reload') location.reload(); else if (e.data.indexOf('instanceId=') == 0) { if (i && i != e.data) location.reload(); else { i = e.data; console.log(i) } } }; w.onclose = function(e) {setTimeout(f, 1000)} })()})();";
     }
 
     public String getLogErrorMessage(Throwable e, String errorDetails) {
         String result = null;
         Object customErrorMessage = null;
+        String homeUrl = (config != null && config.containsKey("host_url")? getHostUrl() : "") +
+            getContextPath();
 
         try {
             Object jsev = null;
@@ -948,9 +910,6 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
                     customErrorMessage = null;
             }
 
-            String homeUrl = (config != null && config.containsKey("host_url")? getHostUrl() : "") +
-                getContextPath();
-
             if (!isCommitted())
                 setContentType(CONTENT_HTML);
 
@@ -980,21 +939,26 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
                     "\" style=\"margin-top: 200px;\">" + homeUrl + "</a></body></html>";
             }
             else {
-                result = "<!doctype html><html><body><button style=\"width: 100%; height: 2.5em; " +
-                    "background: yellow; font-family: monospace; font-weight: bold; border-width: 0;\" " +
-                    "onclick=\"location.reload()\" autofocus>HIT ENTER TO REFRESH (" + getVersion() +
-                    ")</button><pre>\n" + TemplateUtil.escapeHtml(errorMsg) + "\n</pre><a href=\"" + homeUrl +
-                    "\" style=\"margin-top: 20px;\">" + homeUrl +
-                    "</a></body><script>window.scrollTo(0,0);" +
-                    (isDevelopmentMode()? getUpdateWatcherText() : "") + "</script></html>";
+                result = wrapGeneralError(errorMsg, homeUrl);
             }
         }
         catch (Throwable ee) {
-            result = getStackTrace(ee);
+            setContentType(CONTENT_HTML);
+            result = wrapGeneralError(getStackTrace(ee), homeUrl);
         }
 
         return customErrorMessage != null? customErrorMessage.toString() :
             isAjaxRequest()? e.toString()/* make ajax response terse */ : result;
+    }
+
+    private String wrapGeneralError(String errorMsg, String homeUrl) {
+        return "<!doctype html><html><body><button style=\"width: 100%; height: 2.5em; " +
+            "background: yellow; font-family: monospace; font-weight: bold; border-width: 0;\" " +
+            "onclick=\"location.reload()\" autofocus>HIT ENTER TO REFRESH (" + getVersion() +
+            ")</button><pre>\n" + TemplateUtil.escapeHtml(errorMsg) + "\n</pre><a href=\"" + homeUrl +
+            "\" style=\"margin-top: 20px;\">" + homeUrl +
+            "</a></body><script>window.scrollTo(0,0);" +
+            (isDevelopmentMode()? getUpdateWatcherText() : "") + "</script></html>";
     }
 
     private ScriptableMap

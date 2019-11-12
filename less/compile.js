@@ -50,9 +50,6 @@ exports.runLessCompileTask = sync(function(baseName) {
 
     // at least create output dir/file, so tomcat has access to it in dev
     if (!dataLastModified || dataLastModified > Files.getLastModified(output)) {
-        _r.clearSourceFileListCache(baseName);
-        files = _r.listSourceFilesCached(baseName);
-
         logEvent("Compiling " + files.length + " " + baseName + " file(s)");
 
         var p = baseName+'.minify';
@@ -62,5 +59,5 @@ exports.runLessCompileTask = sync(function(baseName) {
             logEvent("No " + baseName + " files changed, compilation skipped.");
 
     return files.length;
-});
+}, exports);
 

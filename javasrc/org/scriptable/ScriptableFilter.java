@@ -73,8 +73,12 @@ public class ScriptableFilter implements Filter {
     public void destroy() {}
 
     public void init(FilterConfig config) {
-        srv = config.getServletContext();
         // set document root here, so it's available before the first request, e.g. for websockets
-        HttpRequest.setDocumentRoot(srv.getRealPath("/"));
+        try {
+            HttpRequest.setDocumentRoot(config.getServletContext().getRealPath("/"));
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

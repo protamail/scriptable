@@ -64,7 +64,7 @@ public final class WsUpdateWatcher extends Endpoint {
                             }
                         }
 
-                        while (!Resources.waitForUpdates(include.toString(), 60) && session.isOpen()) {
+                        while (!Resources.waitForUpdates(include.toString(), 180) && session.isOpen()) {
                                 remote.sendPing(ByteBuffer.wrap("ping".getBytes()));
                         }
                     }

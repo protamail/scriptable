@@ -60,12 +60,10 @@ __globalScope__.console = {
 //__globalScope__.Symbol = null;
 
 /**
- * Returns a function synchronized on object
+ * Returns a function synchronized on obj or func itself
  */
 __globalScope__.sync = function(func, obj) {
-    obj = obj || this;
-
-    return new Packages.org.mozilla.javascript.Synchronizer(func, obj);
+    return new Packages.org.mozilla.javascript.Synchronizer(func, obj || func);
 };
 
 //
@@ -91,61 +89,43 @@ _r.version = versionString.join(", ");
 /**
  * Traverse loaded modules list and reload updated ones
  */
-var reloadUpdatedModules = sync(function (rerun) {
+var reloadUpdatedModules = sync(function () {
     /**
      * Since 'require' doesn't care if file has been updated, file groups (defined by property base name)
      * need to be reloaded _after_ regular module files. This way we'll get up-to-date module function
      * to mixin its exports into group's exports
      */
-    var needClearFileListCache = false;
-
     for (var name in INC) {
-
         if ("file" in getModUpdateStatus(name, INC[name].lastModified)) {
             INC[name].lastModified = 0; // force module reload
             require(name);
-            needClearFileListCache = true;
         }
     }
+}, INC);
 
-    if (needClearFileListCache && !rerun) {
-        clearAllSourceFileListCaches();
-        reloadUpdatedModules(1);
-    }
-});
-
-var cachedLists = {};
-
-function getCacheProp(baseProp) {
-    return baseProp + ".cached_list";
+// sync to eliminate race conditions when checking key presence in cachedSourceDirs
+var listSourceFilesCached = function(baseProp) {
+    return Resources.listSourceFiles(listSourceDirsCached(baseProp), _r.config, baseProp);
 }
 
-// sync to eliminate race condition when checking cl
-var listSourceFilesCached = sync(function(baseProp) {
-    var cl = getCacheProp(baseProp);
+var cachedSourceDirs = {};
+var listSourceDirsCached = sync(function(baseProp) {
+    if (!(baseProp in cachedSourceDirs))
+        // we always cache directories where matched files were found to significantly improve
+        // file listing overhead while still tracking file additions/deletions
+        cachedSourceDirs[baseProp] = Resources.listSourceDirs(_r.config, baseProp);
 
-    if (!(cl in cachedLists))
-        cachedLists[cl] = Resources.listSourceFiles(_r.config, baseProp);
+    return cachedSourceDirs[baseProp];
+}, cachedSourceDirs);
 
-    return cachedLists[cl];
-}, cachedLists);
-
-var clearAllSourceFileListCaches = sync(function() { cachedLists = {} }, cachedLists);
-
-var clearSourceFileListCache = sync(function(baseProp) {
-    delete cachedLists[getCacheProp(baseProp)];
-
-    if (!__compilationMode__)
-        logEvent("Cleared source files list cache for " + baseProp);
-}, cachedLists);
-
+// called from functions synchronized on INC
 function getModUpdateStatus(file, lastModified) {
 
     if (lastModified == -2) // currently loading, return
         return { lastModified: lastModified };
 
     if (lastModified != 404) { // if this file wasn't loaded from bytecode
-        var transFile = "/WEB-INF/transpiled" + file + ".js";
+        var transFile = _r.TRANSPILE_DIR + file + ".js";
 
         var t = Files.getLastModified(transFile);
 
@@ -278,7 +258,6 @@ function extend(to, from, noRedefine) {
  * e.g. exports("/module/path/name.js");
  */
 function exportsFunc(file, paramObj) {
-
     return require(file, true, paramObj);
 }
 
@@ -404,7 +383,7 @@ __globalScope__.require = sync(function(file, isBeingExported, paramObj) { // sy
     }
 
     return INC[file].exports;
-}, __globalScope__);
+}, INC);
 
 var systemSettings = _r.config;
 
@@ -414,7 +393,6 @@ __globalScope__.__rootDispatchFile__ = "root-dispatch-file" in systemSettings?
 
 __globalScope__.__copyInitJsExports__ = function (e) {
     e.listSourceFilesCached = listSourceFilesCached;
-    e.clearSourceFileListCache = clearSourceFileListCache;
     e.log = log;
     e.logInfo = logInfo;
     e.logEvent = logEvent;

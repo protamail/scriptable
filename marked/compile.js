@@ -1,6 +1,6 @@
 var marked = require('marked.js');
 
-var TRANSPILE_DEST = "/WEB-INF/transpiled/";
+var TRANSPILE_DEST = _r.TRANSPILE_DIR + "/";
 
 marked.marked.Renderer.prototype.heading = function (text, level) {
     return "<h" + level + ">" + text + "</h" + level + ">\n";
@@ -20,8 +20,7 @@ exports.runMdTranspileTask = sync(function(baseName, opt) {
     if (!__developmentMode__ && !__compilationMode__)
         throw "runLessCompileTask: should only be used in development or compilation mode";
 
-    function listUpdatedFiles() {
-        var files = _r.listSourceFilesCached(baseName);
+    function listUpdatedFiles(files) {
         var updatedFiles = [];
         var pathMatcher = opt.extMatch? Resources.getPathMatcher(opt.extMatch) : null;
 
@@ -37,15 +36,13 @@ exports.runMdTranspileTask = sync(function(baseName, opt) {
         return updatedFiles;
     }
 
-    var updatedFiles = listUpdatedFiles();
+    var files = _r.listSourceFilesCached(baseName);
+    var updatedFiles = listUpdatedFiles(files);
+
+    if (_r.needRefreshIndexFile(baseName) || updatedFiles.length)
+        _r.genIndexFile(baseName, files);
 
     if (updatedFiles.length) {
-        _r.clearSourceFileListCache(baseName);
-
-        _r.genIndexFile(baseName);
-
-        updatedFiles = listUpdatedFiles();
-
         logEvent("Transpiling " + updatedFiles.length + " " + baseName +
                 (opt.extMatch? " " + opt.extMatch : "") + " file(s) to " + TRANSPILE_DEST);
 
@@ -70,7 +67,7 @@ exports.runMdTranspileTask = sync(function(baseName, opt) {
                 " files changed, compilation skipped.");
 
     return updatedFiles.length;
-});
+}, exports);
 
 // ${...} -- is interpolated following JS template semantics, unless it's escaped as \${...}
 // MD document should assume the generated function takes a single parameter t,
