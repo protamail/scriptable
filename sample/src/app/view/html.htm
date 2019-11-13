@@ -1,7 +1,23 @@
 
-exports.html = ({ r, content, homeUrl, title, rootId, rootClass, script }) => Htm`<!doctype html>
+exports.html = ({ r, content, homeUrl, title, rootId, rootClass, script }) => Htm`
+  <!doctype html>
   <html ${rootId != null? Htm` id="${rootId}"` : ''}${rootClass != null? Htm` class="${rootClass}"` : ''}>
     <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta content="text/html;charset=UTF-8" http-equiv="content-type" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>${title != null? title : ''}</title>
+      <link ${__developmentMode__? Htm`onerror="loadError(this.href)"` : ''}
+        rel="StyleSheet" type="text/css" href="${homeUrl}bundle.css?${r.instanceId}&amp;id=css" />
+      <!-- shortcut icon needs absolute path for browser compatibility -->
+      <link rel="shortcut icon" href="${homeUrl}favicon.ico?${r.instanceId}" />
+    </head>
+    <body data-keydown="#commonKbdRules" onkeydown="bkCustomEvents(this, event, 'data-keydown')"
+        onkeyup="bkCustomEvents(this, event, 'data-keyup')"
+        ${__testEnvironment__? Htm.html('class="test-env"') : ''}>
+      <div id="top_target">
+        ${content}
+      </div>
       ${__developmentMode__? Htm`<script>var __start=new Date();
           window.onload = function() {
               document.title = (new Date() - __start) + " ms: " + document.title;
@@ -12,6 +28,7 @@ exports.html = ({ r, content, homeUrl, title, rootId, rootClass, script }) => Ht
               else {
                   fetch(href).then(function (response) {
                       response.text().then(function (text) {
+                          document.head.innerHTML = ""; // remove stylesheets
                           document.body.innerHTML = text;
                       });
                   });
@@ -19,26 +36,20 @@ exports.html = ({ r, content, homeUrl, title, rootId, rootClass, script }) => Ht
           }
         </script>` : ``
       }
-      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-      <meta content="text/html;charset=UTF-8" http-equiv="content-type" />
-      <meta name="viewport" content="width=device-width,initial-scale=1" />
-      <title>${title != null? title : ''}</title>
-      <link ${__developmentMode__? Htm`onerror="loadError(this.href)"` : ''}
-        rel="StyleSheet" type="text/css" href="${homeUrl}/bundle.css?${r.instanceId}" />
-      <!-- shortcut icon needs absolute path for browser compatibility -->
-      <link rel="shortcut icon" href="${homeUrl}/favicon.ico?${r.instanceId}" />
-    </head>
-    <body ${__testEnvironment__? Htm.html('class="test-env"') : ''}>
-      <div id="top_target">
-        ${content}
-      </div>
       <script>var homeUrl = "${homeUrl}";</script>
       <script ${__developmentMode__? Htm`onerror="loadError(this.src)"` : ''}
-        type="text/javascript" src="${homeUrl}/bundle.js?${r.instanceId}"></script>
-      ${script? Htm.html(script) : ``}
+        type="text/javascript" src="${homeUrl}bundle.js?${r.instanceId}&amp;id=js"></script>
+      ${script? Htm`<script>${Htm.html(script)}</script>` : ``}
       ${__developmentMode__? Htm`<script>${Htm.js(r.getUpdateWatcherText())}</script>` : ''}
     </body>
   </html>
 `;
 
+exports.popupPanel = ({ content }) => Htm`
+  <div class="popup-panel">
+    <div class="panel-content">
+      ${content}
+    </div>
+  </div>
+`;
 

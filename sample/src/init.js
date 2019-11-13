@@ -16,11 +16,6 @@ exports.sessionCache = new LruCache(256);
 // specifies types of static resources that can be served from r.config["public-files"]
 exports("scriptable/common/sendContent_allowed_file_types.js");
 
-// refresh outdated scripts
-exports["__beforeJsReload__"] = function() {
-    var updateCount = _r.runGenericTranspileTask("sjs view");
-};
-
 exports.mailProperties = {
     mail_from: '"Sample app" <sample@scriptable.org>',
     mail_smtp_host: 'localhost',
