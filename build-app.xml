@@ -173,7 +173,7 @@
     </target>
 
     <target name="check-gen-beans">
-        <available file="src/java/model/gen-beans.pl" property="gen-beans.exists" />
+        <available file="src/javasrc/model/gen-beans.pl" property="gen-beans.exists" />
     </target>
 
     <target name="gen-beans" depends="check-gen-beans" if="gen-beans.exists">

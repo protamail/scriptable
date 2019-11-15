@@ -1,0 +1,28 @@
+@font-face {
+    font-family: 'open_sans';
+    src: url('@{staticdir}/fonts/open-sans-300.woff?1') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'open_sans';
+    src: url('@{staticdir}/fonts/open-sans-regular.woff?1') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'open_sans';
+    src: url('@{staticdir}/fonts/open-sans-600.woff?1') format('woff');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'open_sans';
+    src: url('@{staticdir}/fonts/open-sans-700.woff?1') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+

@@ -701,7 +701,7 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
         }
 
         if (startFunc == null)
-            return "startFunc was not defined"; // this is likely due to INIT_JS being reloaded, no big deal
+            return wrapGeneralError("startFunc was not defined", ""); // this is likely due to INIT_JS being reloaded, no big deal
 
         result = callJsFunction(startFunc, getNativeCurrentRequest()).toString();
 

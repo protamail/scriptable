@@ -1,0 +1,35 @@
+@font-face {
+    font-family: 'roboto_sans';
+    src: url('@{staticdir}/fonts/roboto-sans-100.woff?1') format('woff');
+    font-weight: 100;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_sans';
+    src: url('@{staticdir}/fonts/roboto-sans-300.woff?1') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_sans';
+    src: url('@{staticdir}/fonts/roboto-sans-regular.woff?1') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_sans';
+    src: url('@{staticdir}/fonts/roboto-sans-500.woff?1') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_sans';
+    src: url('@{staticdir}/fonts/roboto-sans-700.woff?1') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
