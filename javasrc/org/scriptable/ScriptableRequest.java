@@ -52,7 +52,7 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
     Throwable asyncException = null;
 
     // The names of bootstrap and configuration files
-    public final static String INIT_JS = "scriptable/core/_init.js";
+    public final static String INIT_JS = "scriptable/jssrc/_init.js";
     public final static String CONTEXT_PATH = "__contextPath__";
     public final static String CONTEXT_MODULE = "__contextModule__";
     public final static String CONTEXT_EXPORTS_OBJ = "__contextExportsObj__";
