@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'ico_font';
-    src: url('@{staticdir}/fonts/icofont.woff') format('woff');
+    src: url('@{staticdir}/fonts/icofont.woff?1') format('woff');
     font-weight: normal;
     font-style: normal;
 }

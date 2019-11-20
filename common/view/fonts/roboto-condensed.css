@@ -1,0 +1,21 @@
+@font-face {
+    font-family: 'roboto_condensed';
+    src: url('@{staticdir}/fonts/roboto-condensed-300.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_condensed';
+    src: url('@{staticdir}/fonts/roboto-condensed-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_condensed';
+    src: url('@{staticdir}/fonts/roboto-condensed-700.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
