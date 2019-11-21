@@ -3,6 +3,9 @@ var conf = _r.config;
 // serve batched stylesheets
 // Note: it's better for resources to have well-defined unique URL to improve caching
 exports["bundle.css"] = function(r, p) {
+    if (!p.id)
+        throw "bundle.css request must provide id=<css base property> parameter";
+
     return sendCssBundle(r, p.id);
 };
 
@@ -16,6 +19,9 @@ function sendCssBundle(r, baseProp) {
 
 // serve batched javascript files
 exports["bundle.js"] = function(r, p) {
+    if (!p.id)
+        throw "bundle.js request must provide id=<js base property> parameter";
+
     return sendJsBundle(r, p.id);
 }
 

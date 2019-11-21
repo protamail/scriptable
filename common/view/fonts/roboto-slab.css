@@ -1,27 +1,48 @@
 @font-face {
     font-family: 'roboto_slab';
-    src: url('@{staticdir}/fonts/roboto-slab-100.woff?1') format('woff');
+    src: url('@{staticdir}/fonts/roboto-slab-100.woff?2') format('woff');
     font-weight: 100;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'roboto_slab';
-    src: url('@{staticdir}/fonts/roboto-slab-300.woff?1') format('woff');
+    src: url('@{staticdir}/fonts/roboto-slab-200.woff?2') format('woff');
+    font-weight: 200;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_slab';
+    src: url('@{staticdir}/fonts/roboto-slab-300.woff?2') format('woff');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'roboto_slab';
-    src: url('@{staticdir}/fonts/roboto-slab-regular.woff?1') format('woff');
+    src: url('@{staticdir}/fonts/roboto-slab-regular.woff?2') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'roboto_slab';
-    src: url('@{staticdir}/fonts/roboto-slab-700.woff?1') format('woff');
+    src: url('@{staticdir}/fonts/roboto-slab-500.woff?2') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_slab';
+    src: url('@{staticdir}/fonts/roboto-slab-600.woff?2') format('woff');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto_slab';
+    src: url('@{staticdir}/fonts/roboto-slab-700.woff?2') format('woff');
     font-weight: bold;
     font-style: normal;
 }
