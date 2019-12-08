@@ -370,7 +370,7 @@ public final class TemplateUtil {
 
             synchronized (nativeP) {
                 // keep the newline for readability while eliminating WS between tags
-                Pattern stripA = Pattern.compile("(/?|-?-?)>\\s*\\n\\s*", Pattern.DOTALL);
+                Pattern stripA = Pattern.compile("\\s*(/?|-?-?)>\\s*\\n\\s*", Pattern.DOTALL);
                 // trim leading/trailing WS if fragment starts/ends with a tag
                 Pattern stripB = Pattern.compile("^\\s*\\n\\s*(<)|(>)\\s*\\n\\s*$", Pattern.DOTALL);
                 // remove static HTML comments, this won't work for comments with embedded interpolation ${}

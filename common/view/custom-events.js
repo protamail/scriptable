@@ -34,13 +34,18 @@ exports.bkCustomEvents = function (element, e, dataAttr) {
     function probeTarget(t) {
         // interpret "links" like xxx?a=1&b=2#funcX as funcX("xxx", { a: 1, b: 2 }) if funcX exists
         // Multiple, space-separated "links" can be specified
-        let hrefs = t.getAttribute && t.getAttribute(dataAttr) ||
-            t.tagName && t.tagName == "A" && e.type == "click" && t.getAttribute("href");
+        let attr = dataAttr;
+        let hrefs = t.getAttribute && t.getAttribute(attr);
+
+        if (!hrefs && t.tagName && t.tagName == "A" && e.type == "click")
+            hrefs = t.getAttribute(attr = "href");
 
         if (hrefs) {
-            let bkCache = t.bkCache;
+            let bkCache = t.bkCache && t.bkCache[attr];
 
             if (!bkCache) { // parse if not cached
+                t.bkCache = t.bkCache || {};
+                bkCache = t.bkCache[attr] = [];
 
                 for (let href of hrefs.split(" ")) {
                     let h = href.indexOf("#");
@@ -49,8 +54,6 @@ exports.bkCustomEvents = function (element, e, dataAttr) {
                     let func = window[fn];
 
                     if (fn != null && typeof func == "function") {
-                        bkCache = bkCache || [];
-                        t.bkCache = bkCache;
                         bkCache.push({
                             func: func,
                             path: href.substring(0, q != -1? q : h != -1? h : href.length),

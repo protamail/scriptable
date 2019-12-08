@@ -155,6 +155,7 @@ __globalScope__.Htm = JavaMethodHandles.applyJsTemplate;
 Htm.html = JavaMethodHandles.htmlFragment;
 Htm.js = JavaMethodHandles.htmlFragment;
 Htm.id = JavaMethodHandles.htmlFragment;
+Htm.noescape = JavaMethodHandles.htmlFragment;
 Htm.escapeJs = JavaMethodHandles.escapeJs;
 Htm.unescapeUnicode = JavaMethodHandles.unescapeUnicode;
 Htm.escapeB64 = JavaMethodHandles.escapeB64;

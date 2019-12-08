@@ -1,3 +1,4 @@
+// Unless expiresSec is specified, defaults to 30 days
 exports.sendContent_allowed_file_types = {
     json: {
         contentType: "application/json"
@@ -10,6 +11,9 @@ exports.sendContent_allowed_file_types = {
     },
     js: {
         contentType: "text/javascript"
+    },
+    svg: {
+        contentType: "image/svg+xml"
     },
     gif: {
         contentType: "image/gif",

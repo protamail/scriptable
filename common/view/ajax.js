@@ -313,7 +313,8 @@ function ajax(url, postParams) {
     }
 
     let async = postParams.__async__ == null || postParams.__async__;
-    let update = postParams.__updateElement__;
+    let replace = postParams.__replaceElement__;
+    let update = postParams.__updateElement__ || replace;
     let data = postParams.__data__;
     let method = postParams.__method__ || "post";
     let onSuccess = postParams.__success__;
@@ -321,6 +322,7 @@ function ajax(url, postParams) {
     let onComplete = postParams.__finally__;
     delete postParams.__async__;
     delete postParams.__updateElement__;
+    delete postParams.__replaceElement__;
     delete postParams.__data__;
     delete postParams.__method__;
     delete postParams.__success__;
@@ -348,7 +350,10 @@ function ajax(url, postParams) {
                 let target = typeof (update) == "string"? document.getElementById(update) : update;
 
                 if (target) {
-                    target.innerHTML = text;
+                    if (replace)
+                        target.parentNode.replaceChild($(text)[0], target);
+                    else
+                        target.innerHTML = text;
 
                     // synchronously eval scripts, so onSuccess runs afterwards
                     evalScripts(target);
