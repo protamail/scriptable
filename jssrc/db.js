@@ -88,8 +88,7 @@ function mapByPathAndName(queryResults, pathProp, nameProp) {
 };
 
 /**
- * @param colNames array or list of column names to nest by,
- *        e.g. ['col1', 'col2', 'col3'] or 'col1', 'col2', 'col3'
+ * @param colNames array of column names to nest by
  */
 function nestBy(queryResults, colNames) {
     var result = [], group = { dict: {}, array: result };
@@ -166,12 +165,14 @@ function definePrototypeFunc(obj, name, func) {
     });
 }
 
+// NOTE: colNames can be either array [ "c1", c2", ..] or list "c1", c2", .. of columns
+// 
 definePrototypeFunc(Array, "sortBy", function(colNames) {
-    return sortBy(this, toArray(colNames));
+    return sortBy(this, toArray.apply(null, arguments));
 });
 
 definePrototypeFunc(Array, "mapBy", function(colNames) {
-    return mapBy(this, toArray(colNames), false);
+    return mapBy(this, toArray.apply(null, arguments), false);
 });
 
 definePrototypeFunc(Array, "mapByPathAndName", function(pathProp, nameProp) {
@@ -179,11 +180,11 @@ definePrototypeFunc(Array, "mapByPathAndName", function(pathProp, nameProp) {
 });
 
 definePrototypeFunc(Array, "mapUniqueBy", function(colNames) {
-    return mapBy(this, toArray(colNames), true);
+    return mapBy(this, toArray.apply(null, arguments), true);
 });
 
 definePrototypeFunc(Array, "nestBy", function(colNames) {
-    return nestBy(this, toArray(colNames));
+    return nestBy(this, toArray.apply(null, arguments));
 });
 
 definePrototypeFunc(Array, "groupIndicator", function(colNames, optNewIndColName) {

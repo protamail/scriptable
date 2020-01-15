@@ -1,26 +1,16 @@
 function bkAlert(msg, opt = undefined) {
-    var restoreFocus = document.activeElement;
     var $al = $(`<alert-shield tabindex="-1" class="alert-anim ${opt && opt.cls || ""}">`)
-        .css({
-            position: "fixed",
-            zIndex: 1000,
-            top: 0, left: 0, bottom: 0, right: 0,
-            // center content
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            paddingBottom: "18vh" /* shift centered content a little up */
-        })
         .html('<alert-body>')
         .on("click keydown", function(e) {
 
             if (e.target === this && e.type === "click" || e.type === "keydown" && e.which == 27) {
                     $($al[0].firstChild).trigger("close", { originalEvent: e }); // give user code chance to override
             }
-            else if (e.type === "click") // window handler expects clicks only
-                bkCustomEvents(this, e, 'data-href');
+//            else if (e.type === "click") // window handler expects clicks only
+//                bkCustomEvents(this, e, 'data-href');
 
-            e.stopPropagation(); // make the dialog modal (blocking)
+//            if (opt && opt.modal)
+//                e.stopPropagation(); // make the dialog modal (blocking)
 
 //            if (e.target === this)
 //                $(this).remove();
@@ -28,8 +18,8 @@ function bkAlert(msg, opt = undefined) {
         .on("close", function(e) {
             $al.remove();
 
-            if (restoreFocus && restoreFocus.focus)
-                restoreFocus.focus();
+            let $a = $("alert-shield").last();
+            $a[0] && $a[0].focus(); // return the kbd focus to underlying alert shield if any
         })
         .appendTo("body");
 
@@ -56,6 +46,7 @@ function bkAlert(msg, opt = undefined) {
 function bkError(msg, opt) {
     opt = opt || {};
     opt.cls = `error ${opt.cls || ""}`;
+//    opt.modal = true;
 
     return bkAlert(msg, opt);
 }
@@ -63,6 +54,7 @@ function bkError(msg, opt) {
 function bkWarning(msg, opt) {
     opt = opt || {};
     opt.cls = `warning ${opt.cls || ""}`;
+//    opt.modal = true;
 
     return bkAlert(msg, opt);
 }

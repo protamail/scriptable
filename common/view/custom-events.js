@@ -7,10 +7,10 @@ exports.bkCustomEvents = function (element, e, dataAttr) {
     let cont = true; // will turn to false if e.preventPropagation() was called by one of the handlers
     dataAttr = dataAttr || 'data-href';
 
-    for (let c = document.getElementsByTagName("PRE-CUSTOM-EVENT"), i = 0; i < c.length; i++) {
-        if (c[i].getAttribute("disabled") == null)
-            cont = probeTarget(c[i]) !== false && cont;
-    }
+//    for (let c = document.getElementsByTagName("PRE-CUSTOM-EVENT"), i = 0; i < c.length; i++) {
+//        if (c[i].getAttribute("disabled") == null)
+//            cont = probeTarget(c[i]) !== false && cont;
+//    }
 
     if (cont) {
         for (let t = e.target; t != null; t = t.parentNode) {
@@ -24,12 +24,12 @@ exports.bkCustomEvents = function (element, e, dataAttr) {
         }
     }
 
-    if (cont) {
-        for (let c = document.getElementsByTagName("POST-CUSTOM-EVENT"), i = 0; i < c.length; i++) {
-            if (c[i].getAttribute("disabled") == null)
-                cont = probeTarget(c[i]) !== false && cont;
-        }
-    }
+//    if (cont) {
+//        for (let c = document.getElementsByTagName("POST-CUSTOM-EVENT"), i = 0; i < c.length; i++) {
+//            if (c[i].getAttribute("disabled") == null)
+//                cont = probeTarget(c[i]) !== false && cont;
+//        }
+//    }
 
     function probeTarget(t) {
         // interpret "links" like xxx?a=1&b=2#funcX as funcX("xxx", { a: 1, b: 2 }) if funcX exists
@@ -65,24 +65,22 @@ exports.bkCustomEvents = function (element, e, dataAttr) {
                 }
             }
 
-            if (bkCache) {
-
-                if (updateWindowEvent)
-                    window.event = e; // FF is not setting this one
-
-                for (let i = 0; i < bkCache.length; i++) {
-                    let c = bkCache[i];
-                    let r = c.func.call(t, c.path, c.data, e);
-
-                    if (r !== true) // handler can return true to preserve the default link action
-                        e.preventDefault(); // don't follow link and prevent subsequent keypress event
-                }
-
-                if (e.cancelBubble)
-                    return false;
-            }
-            else if (t.tagName == "A")
+            if (!bkCache.length && t.tagName == "A")
                 return false; // this is an actual href, let it work as usual
+
+            if (updateWindowEvent)
+                window.event = e; // FF is not setting this one
+
+            for (let i = 0; i < bkCache.length; i++) {
+                let c = bkCache[i];
+                let r = c.func.call(t, c.path, c.data, e);
+
+                if (r !== true) // handler can return true to preserve the default link action
+                    e.preventDefault(); // don't follow link and prevent subsequent keypress event
+            }
+
+            if (e.cancelBubble)
+                return false;
         }
     }
 

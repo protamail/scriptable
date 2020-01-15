@@ -163,6 +163,8 @@ Htm.escapeUri = encodeURIComponent;
 Htm.escapeHtml = JavaMethodHandles.escapeHtml;
 Htm.unescapeHtml = JavaMethodHandles.unescapeHtml;
 Htm.format = JavaMethodHandles.formatAny;
+Htm.nvl = (v, n) => v == null? n : v;
+Htm.zvl = (v, z) => v === 0? z : v;
 
 Object.defineProperty(Htm, 'keepWs', {
     set: function(v) {

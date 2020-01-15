@@ -1,0 +1,14 @@
+@font-face {
+    font-family: 'play_sans';
+    src: url('@{staticdir}/fonts/play-regular.woff?1') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'play_sans';
+    src: url('@{staticdir}/fonts/play-bold.woff?1') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
