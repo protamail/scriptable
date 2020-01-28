@@ -1036,14 +1036,17 @@ public final class ScriptableRequest extends HttpRequest implements Callable {
 
             for (Object k: p.getIds()) {
                 sb.append(k);
-                sb.append('=');
 
                 String v = (k != null? p.get(k.toString(), p) : null) + "";
 
                 if (v.length() > 50) // skip too long post parameters (e.g. base64 file upload)
                     v = v.substring(0, 15) + "...";
 
-                sb.append(v);
+                if (v != null && !v.equals("")) {
+                    sb.append('=');
+                    sb.append(v);
+                }
+
                 sb.append('&');
             }
 
