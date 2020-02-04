@@ -33,3 +33,10 @@
     font-style: normal;
 }
 
+@font-face {
+    font-family: 'roboto_sans';
+    src: url('@{staticdir}/fonts/roboto-sans-900.woff?1') format('woff');
+    font-weight: 900;
+    font-style: normal;
+}
+
